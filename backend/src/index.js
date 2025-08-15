@@ -98,9 +98,7 @@ const startServer = async () => {
     }
     
     // 同步数据库模型
-    if (process.env.NODE_ENV === 'development') {
-      await syncDatabase({ alter: true });
-    }
+    await syncDatabase();
     
     // 启动HTTP服务器
     const server = app.listen(PORT, () => {

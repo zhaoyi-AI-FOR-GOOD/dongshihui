@@ -2,7 +2,7 @@ const Meeting = require('../models/Meeting');
 const MeetingParticipant = require('../models/MeetingParticipant');
 const Statement = require('../models/Statement');
 const Director = require('../models/Director');
-const { claudeService } = require('../services/claudeService');
+const claudeService = require('../services/claudeService');
 const { Op } = require('sequelize');
 
 // Helper functions

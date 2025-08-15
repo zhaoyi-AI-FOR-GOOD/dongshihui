@@ -5,8 +5,10 @@ import Navbar from './components/Navbar';
 import BoardHall from './pages/BoardHall';
 import DirectorManager from './pages/DirectorManager';
 import CreateDirector from './pages/CreateDirector';
+import DirectorDetails from './pages/DirectorDetails';
 import MeetingRoom from './pages/MeetingRoom';
 import MeetingHistory from './pages/MeetingHistory';
+import CreateMeeting from './pages/CreateMeeting';
 
 function App() {
   return (
@@ -30,8 +32,10 @@ function App() {
           <Route path="/directors" element={<DirectorManager />} />
           <Route path="/directors/create" element={<CreateDirector />} />
           <Route path="/directors/edit/:id" element={<CreateDirector />} />
+          <Route path="/directors/details/:id" element={<DirectorDetails />} />
           
           {/* 会议系统 */}
+          <Route path="/meetings/create" element={<CreateMeeting />} />
           <Route path="/meeting/:id" element={<MeetingRoom />} />
           <Route path="/meetings" element={<MeetingHistory />} />
           

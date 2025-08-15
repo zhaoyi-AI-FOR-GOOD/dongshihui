@@ -157,7 +157,7 @@ const DirectorManager = () => {
           <Button
             variant="outlined"
             startIcon={<UploadIcon />}
-            onClick={() => toast.info('批量导入功能开发中...')}
+            onClick={() => toast('批量导入功能开发中...')}
           >
             批量导入
           </Button>
@@ -395,8 +395,7 @@ const DirectorManager = () => {
         </MenuItem>
         
         <MenuItem onClick={() => {
-          // TODO: 实现董事详情查看
-          toast.info('详情查看功能开发中...');
+          navigate(`/directors/details/${actionMenu.director.id}`);
           setActionMenu({ anchorEl: null, director: null });
         }}>
           查看详情

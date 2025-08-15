@@ -102,10 +102,15 @@ export const directorAPI = {
       status,
       is_active: isActive
     });
+  },
+
+  // 重新解析董事人设
+  reparseDirector: (id) => {
+    return api.post(`/directors/${id}/reparse`);
   }
 };
 
-// 会议相关API (预留)
+// 会议相关API
 export const meetingAPI = {
   // 获取所有会议
   getAll: (params = {}) => {
@@ -121,6 +126,46 @@ export const meetingAPI = {
   getById: (id) => {
     return api.get(`/meetings/${id}`);
   },
+
+  // 开始会议
+  start: (id) => {
+    return api.post(`/meetings/${id}/start`);
+  },
+
+  // 暂停会议
+  pause: (id) => {
+    return api.post(`/meetings/${id}/pause`);
+  },
+
+  // 结束会议
+  finish: (id) => {
+    return api.post(`/meetings/${id}/finish`);
+  },
+
+  // 恢复会议
+  resume: (id) => {
+    return api.post(`/meetings/${id}/resume`);
+  },
+
+  // 生成下一个发言
+  generateNextStatement: (id, data = {}) => {
+    return api.post(`/meetings/${id}/next-statement`, data);
+  },
+
+  // 获取会议发言记录
+  getStatements: (id, params = {}) => {
+    return api.get(`/meetings/${id}/statements`, { params });
+  },
+
+  // 获取会议统计
+  getStats: (id) => {
+    return api.get(`/meetings/${id}/stats`);
+  },
+
+  // 添加参与者
+  addParticipants: (id, data) => {
+    return api.post(`/meetings/${id}/participants`, data);
+  }
 };
 
 // 默认导出api实例

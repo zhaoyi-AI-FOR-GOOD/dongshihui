@@ -65,7 +65,7 @@ const CreateDirector = () => {
     {
       enabled: isEditing,
       onSuccess: (response) => {
-        const director = response.data;
+        const director = response.data.data;
         setFormData({
           name: director.name || '',
           title: director.title || '',
@@ -127,26 +127,76 @@ const CreateDirector = () => {
 
     setIsAnalyzing(true);
     try {
-      const response = await directorAPI.parsePrompt(formData.system_prompt);
-      const result = response.data.data;
+      let response;
+      let result;
       
-      setAnalysisResult(result);
-      
-      // 自动填充解析结果
-      if (result.parsed_info) {
-        setFormData(prev => ({
-          ...prev,
-          name: result.parsed_info.name !== '未知历史人物' ? result.parsed_info.name : prev.name,
-          title: result.parsed_info.title || prev.title,
-          era: result.parsed_info.era || prev.era,
-          personality_traits: result.parsed_info.personality_traits || prev.personality_traits,
-          core_beliefs: result.parsed_info.core_beliefs || prev.core_beliefs,
-          speaking_style: result.parsed_info.speaking_style || prev.speaking_style,
-          expertise_areas: result.parsed_info.expertise_areas || prev.expertise_areas
-        }));
+      if (isEditing) {
+        // 编辑模式：使用重新解析API
+        response = await directorAPI.reparseDirector(id);
+        result = response.data.data;
+        
+        // 重新加载董事数据
+        queryClient.invalidateQueries(['director', id]);
+        
+        // 自动更新表单数据
+        if (result.director) {
+          setFormData({
+            name: result.director.name || '',
+            title: result.director.title || '',
+            era: result.director.era || '',
+            avatar_url: result.director.avatar_url || '',
+            system_prompt: result.director.system_prompt || '',
+            personality_traits: result.director.personality_traits || [],
+            core_beliefs: result.director.core_beliefs || [],
+            speaking_style: result.director.speaking_style || '',
+            expertise_areas: result.director.expertise_areas || [],
+            is_active: result.director.is_active
+          });
+        }
+        
+        // 设置分析结果用于显示
+        setAnalysisResult({
+          is_ai_generated: result.ai_analysis.is_ai_generated,
+          confidence_score: result.ai_analysis.confidence_score,
+          tokens_used: result.ai_analysis.tokens_used,
+          parsed_info: {
+            name: result.director.name,
+            title: result.director.title,
+            era: result.director.era,
+            personality_traits: result.director.personality_traits,
+            core_beliefs: result.director.core_beliefs,
+            speaking_style: result.director.speaking_style,
+            expertise_areas: result.director.expertise_areas
+          }
+        });
+        
+      } else {
+        // 创建模式：使用原有的解析API
+        response = await directorAPI.parsePrompt(formData.system_prompt);
+        result = response.data.data;
+        
+        setAnalysisResult(result);
+        
+        // 自动填充解析结果
+        if (result.parsed_info) {
+          setFormData(prev => ({
+            ...prev,
+            name: result.parsed_info.name !== '未知历史人物' ? result.parsed_info.name : prev.name,
+            title: result.parsed_info.title || prev.title,
+            era: result.parsed_info.era || prev.era,
+            personality_traits: result.parsed_info.personality_traits || prev.personality_traits,
+            core_beliefs: result.parsed_info.core_beliefs || prev.core_beliefs,
+            speaking_style: result.parsed_info.speaking_style || prev.speaking_style,
+            expertise_areas: result.parsed_info.expertise_areas || prev.expertise_areas
+          }));
+        }
       }
 
-      toast.success(result.is_ai_generated ? 'AI解析完成！' : '基础解析完成');
+      toast.success(
+        isEditing 
+          ? '重新解析完成！董事信息已更新' 
+          : (result.is_ai_generated ? 'AI解析完成！' : '基础解析完成')
+      );
     } catch (error) {
       toast.error('解析失败: ' + error.message);
     } finally {
@@ -250,24 +300,28 @@ const CreateDirector = () => {
                   required
                 />
 
-                {!isEditing && (
-                  <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<AutoAwesomeIcon />}
-                      onClick={analyzePrompt}
-                      disabled={isAnalyzing || !formData.system_prompt.trim()}
-                    >
-                      {isAnalyzing ? '解析中...' : 'AI解析'}
-                    </Button>
+                <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AutoAwesomeIcon />}
+                    onClick={analyzePrompt}
+                    disabled={isAnalyzing || !formData.system_prompt.trim()}
+                  >
+                    {isAnalyzing ? '解析中...' : (isEditing ? '重新解析' : 'AI解析')}
+                  </Button>
 
-                    {useSmartMode && (
-                      <Alert severity="info" sx={{ flex: 1 }}>
-                        智能创建模式：系统将自动解析提示词并创建董事，无需手动填写其他信息
-                      </Alert>
-                    )}
-                  </Box>
-                )}
+                  {!isEditing && useSmartMode && (
+                    <Alert severity="info" sx={{ flex: 1 }}>
+                      智能创建模式：系统将自动解析提示词并创建董事，无需手动填写其他信息
+                    </Alert>
+                  )}
+                  
+                  {isEditing && (
+                    <Alert severity="info" sx={{ flex: 1 }}>
+                      编辑模式：可以重新解析人设提示词来更新董事的AI生成字段
+                    </Alert>
+                  )}
+                </Box>
               </CardContent>
             </Card>
 

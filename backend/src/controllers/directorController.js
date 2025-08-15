@@ -437,6 +437,73 @@ router.get('/claude-stats', async (req, res) => {
   }
 });
 
+// 重新解析董事人设 - 用于更新后重新生成AI分析字段
+router.post('/:id/reparse', async (req, res) => {
+  try {
+    const director = await Director.findByPk(req.params.id);
+    
+    if (!director) {
+      return res.status(404).json({
+        success: false,
+        error: '董事不存在'
+      });
+    }
+
+    console.log(`🔄 重新解析董事人设: ${director.name}`);
+    
+    // 使用Claude API重新解析system_prompt
+    const parseResult = await claudeService.parseDirectorPrompt(director.system_prompt);
+    let parsedInfo;
+    
+    if (parseResult.success) {
+      parsedInfo = parseResult.data;
+    } else if (parseResult.fallbackData) {
+      parsedInfo = parseResult.fallbackData;
+    } else {
+      throw new Error('提示词解析失败');
+    }
+
+    // 更新董事的AI分析字段
+    await director.update({
+      personality_traits: parsedInfo.personality_traits || [],
+      core_beliefs: parsedInfo.core_beliefs || [],
+      speaking_style: parsedInfo.speaking_style || '',
+      expertise_areas: parsedInfo.expertise_areas || [],
+      era: parsedInfo.era || director.era,
+      title: parsedInfo.title || director.title,
+      metadata: {
+        ...director.metadata,
+        ai_generated: parseResult.success,
+        tokens_used: parseResult.tokensUsed || 0,
+        confidence_score: parseResult.confidence || 0.5,
+        reparse_method: 'manual_reparse',
+        reparsed_at: new Date().toISOString()
+      }
+    });
+
+    res.json({
+      success: true,
+      message: '董事人设重新解析成功',
+      data: {
+        director,
+        ai_analysis: {
+          tokens_used: parseResult.tokensUsed || 0,
+          confidence_score: parseResult.confidence || 0.5,
+          is_ai_generated: parseResult.success
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('重新解析董事人设失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '重新解析失败',
+      message: error.message
+    });
+  }
+});
+
 // 智能创建董事 - 结合解析和创建
 router.post('/create-from-prompt', async (req, res) => {
   try {

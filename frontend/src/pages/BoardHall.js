@@ -151,10 +151,7 @@ const BoardHall = () => {
               variant="contained"
               size="small"
               startIcon={<PlayIcon />}
-              onClick={() => {
-                // TODO: 实现发起会议功能
-                toast.success('会议功能开发中...');
-              }}
+              onClick={() => navigate('/meetings/create')}
             >
               发起讨论
             </Button>
@@ -302,10 +299,10 @@ const BoardHall = () => {
           <Button
             variant="contained"
             onClick={() => {
-              if (directors.length >= 2) {
-                toast.success('会议功能开发中...');
+              if (directors.length >= 1) {
+                navigate('/meetings/create');
               } else {
-                toast.error('至少需要2位董事才能开始会议');
+                toast.error('至少需要1位董事才能开始会议');
               }
             }}
             size="large"

@@ -5,9 +5,12 @@ class ClaudeService {
   constructor() {
     // 初始化Anthropic客户端
     try {
-      if (this.isConfigured()) {
+      const apiKey = process.env.CLAUDE_API_KEY;
+      console.log('🔑 检查Claude API密钥:', apiKey ? `存在 (长度: ${apiKey.length})` : '不存在');
+      
+      if (apiKey && apiKey !== 'your_claude_api_key_here' && !apiKey.includes('placeholder')) {
         this.client = new Anthropic({
-          apiKey: process.env.CLAUDE_API_KEY,
+          apiKey: apiKey,
         });
         console.log('✅ Claude API客户端初始化成功');
       } else {
@@ -21,7 +24,7 @@ class ClaudeService {
     
     // 配置参数
     this.config = {
-      model: 'claude-3-sonnet-20240229',
+      model: 'claude-4-sonnet-20250514',
       maxTokens: parseInt(process.env.CLAUDE_MAX_TOKENS_PER_REQUEST) || 1000,
       temperature: 0.7,
       timeout: parseInt(process.env.CLAUDE_REQUEST_TIMEOUT) || 30000
@@ -38,7 +41,8 @@ class ClaudeService {
 
   // 检查API密钥是否配置
   isConfigured() {
-    return !!process.env.CLAUDE_API_KEY && process.env.CLAUDE_API_KEY !== 'your_claude_api_key_here';
+    const apiKey = process.env.CLAUDE_API_KEY;
+    return !!(apiKey && apiKey !== 'your_claude_api_key_here' && !apiKey.includes('placeholder'));
   }
 
   // 检查今日token使用限制
@@ -73,8 +77,10 @@ class ClaudeService {
 
   // 解析人设提示词，提取董事基本信息
   async parseDirectorPrompt(systemPrompt) {
+    console.log('🔍 解析前检查 - isConfigured():', this.isConfigured(), 'client存在:', !!this.client);
+    
     if (!this.isConfigured() || !this.client) {
-      // 如果没有配置API密钥或客户端初始化失败，返回模拟数据
+      console.log('🎭 使用模拟数据解析人设提示词（未配置Claude API密钥）');
       return {
         success: false,
         fallbackData: this.generateMockParsedInfo(systemPrompt),
@@ -138,7 +144,17 @@ ${systemPrompt}
       // 尝试解析JSON
       let parsedInfo;
       try {
-        parsedInfo = JSON.parse(content);
+        // 处理Claude Sonnet 4返回的格式化JSON（移除```json标记）
+        let cleanContent = content;
+        if (content.startsWith('```json') && content.endsWith('```')) {
+          cleanContent = content.slice(7, -3).trim();
+        } else if (content.startsWith('```') && content.endsWith('```')) {
+          // 处理没有json标识的情况
+          cleanContent = content.slice(3, -3).trim();
+        }
+        
+        parsedInfo = JSON.parse(cleanContent);
+        console.log('✅ 成功解析Claude API返回的JSON');
       } catch (jsonError) {
         console.warn('⚠️ 无法解析Claude API返回的JSON，使用正则表达式提取');
         parsedInfo = this.extractInfoFromText(content);
@@ -194,8 +210,15 @@ ${systemPrompt}
     // 基于提示词内容的简单关键词匹配
     const prompt = systemPrompt.toLowerCase();
     
+    // 根据提示词内容生成随机名字，避免重名
+    const randomNames = [
+      "历史学者", "思想大师", "智慧导师", "文化先贤", "哲学巨匠",
+      "古代圣贤", "理论家", "学者", "大师", "先哲"
+    ];
+    const randomName = randomNames[Math.floor(Math.random() * randomNames.length)] + "_" + Date.now().toString().slice(-4);
+    
     let mockInfo = {
-      name: "未知历史人物",
+      name: randomName,
       title: "思想家",
       era: "历史时期",
       core_beliefs: ["理性思考", "追求真理"],
@@ -238,6 +261,50 @@ ${systemPrompt}
         personality_traits: ["观察细致", "谨慎", "坚持"],
         expertise_areas: ["生物学", "地质学", "自然史"],
         historical_significance: "进化论创立者，现代生物学奠基人"
+      };
+    } else if (prompt.includes('马克思') || prompt.includes('marx')) {
+      mockInfo = {
+        name: "卡尔·马克思",
+        title: "哲学家、政治经济学家",
+        era: "19世纪 (1818-1883)",
+        core_beliefs: ["历史唯物主义", "阶级斗争", "社会革命"],
+        speaking_style: "激情澎湃、逻辑严密",
+        personality_traits: ["革命热情", "思维深刻", "批判精神"],
+        expertise_areas: ["哲学", "政治经济学", "社会学"],
+        historical_significance: "共产主义理论创立者，现代社会主义奠基人"
+      };
+    } else if (prompt.includes('孔子') || prompt.includes('confucius')) {
+      mockInfo = {
+        name: "孔子",
+        title: "教育家、哲学家",
+        era: "春秋时期 (前551-前479)",
+        core_beliefs: ["仁爱", "礼制", "教育立人"],
+        speaking_style: "温文尔雅、循循善诱",
+        personality_traits: ["仁慈", "博学", "因材施教"],
+        expertise_areas: ["教育学", "伦理学", "政治学"],
+        historical_significance: "儒家学派创始人，中国教育之父"
+      };
+    } else if (prompt.includes('老子') || prompt.includes('laozi')) {
+      mockInfo = {
+        name: "老子",
+        title: "道家创始人、哲学家",
+        era: "春秋时期 (约前6世纪)",
+        core_beliefs: ["道法自然", "无为而治", "阴阳调和"],
+        speaking_style: "深邃玄妙、寓意深长",
+        personality_traits: ["超脱", "智慧", "返璞归真"],
+        expertise_areas: ["道家哲学", "政治哲学", "自然哲学"],
+        historical_significance: "道家学派创始人，《道德经》作者"
+      };
+    } else if (prompt.includes('王阳明') || prompt.includes('王守仁')) {
+      mockInfo = {
+        name: "王阳明",
+        title: "明代哲学家、教育家",
+        era: "明代 (1472-1529)",
+        core_beliefs: ["知行合一", "心即理", "致良知"],
+        speaking_style: "深入浅出、启发思辨",
+        personality_traits: ["博学", "实践精神", "教育热忱"],
+        expertise_areas: ["心学", "教育学", "军事学"],
+        historical_significance: "心学集大成者，明代著名思想家"
       };
     }
 
@@ -341,7 +408,7 @@ ${meetingContext.previousStatements ? `之前的发言：\n${meetingContext.prev
       const generationTime = Date.now() - startTime;
 
       // 更新使用统计
-      this.updateUsageStats(tokensUsed);
+      this.recordUsage(tokensUsed);
 
       return {
         success: true,
