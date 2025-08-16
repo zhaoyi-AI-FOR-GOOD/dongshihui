@@ -2,6 +2,10 @@ name = "dongshihui-api"
 main = "workers/index.js"
 compatibility_date = "2024-01-01"
 
+# Workers模式配置
+[env.production]
+name = "dongshihui-api"
+
 # 环境变量
 [env.production.vars]
 NODE_ENV = "production"
