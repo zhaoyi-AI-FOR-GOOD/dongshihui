@@ -10,12 +10,12 @@ NODE_ENV = "production"
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "dongshihui-db"
-database_id = ""  # 需要在Cloudflare创建D1数据库后填入
+database_id = "741c830e-ffcf-4231-b104-90af2d90da59"
 
 # KV存储配置 (用于会话管理)
 [[env.production.kv_namespaces]]
 binding = "KV"
-id = ""  # 需要在Cloudflare创建KV命名空间后填入
+id = "7cea8217ea1f466ba3de2a323ea2c8a1"
 
 # 开发环境配置
 [env.development]
@@ -23,19 +23,14 @@ name = "dongshihui-api-dev"
 
 [[env.development.d1_databases]]
 binding = "DB"
-database_name = "dongshihui-db-dev"
-database_id = ""
+database_name = "dongshihui-db"
+database_id = "741c830e-ffcf-4231-b104-90af2d90da59"
 
 [[env.development.kv_namespaces]]
 binding = "KV"
-id = ""
+id = "7cea8217ea1f466ba3de2a323ea2c8a1"
 
 # 部署配置
 [build]
 command = "npm run build:worker"
 cwd = "."
-
-# 静态文件服务
-[site]
-bucket = "./frontend/build"
-entry-point = "workers"
