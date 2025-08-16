@@ -315,9 +315,9 @@ const CreateMeeting = () => {
                                 <Typography variant="body2" color="text.secondary">
                                   {director.title}
                                 </Typography>
-                                {director.expertise_areas && director.expertise_areas.length > 0 && (
+                                {director.expertise_areas && (
                                   <Box sx={{ mt: 0.5 }}>
-                                    {director.expertise_areas.slice(0, 2).map((area, index) => (
+                                    {(typeof director.expertise_areas === 'string' ? JSON.parse(director.expertise_areas) : director.expertise_areas).slice(0, 2).map((area, index) => (
                                       <Chip
                                         key={index}
                                         label={area}

@@ -97,9 +97,9 @@ const BoardHall = () => {
             </Typography>
 
             {/* 专业领域标签 */}
-            {director.expertise_areas && director.expertise_areas.length > 0 && (
+            {director.expertise_areas && (
               <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {director.expertise_areas.slice(0, 3).map((area, index) => (
+                {(typeof director.expertise_areas === 'string' ? JSON.parse(director.expertise_areas) : director.expertise_areas).slice(0, 3).map((area, index) => (
                   <Chip
                     key={index}
                     label={area}
