@@ -3,8 +3,8 @@ import axios from 'axios';
 // 动态确定API基础URL
 const getBaseURL = () => {
   if (process.env.NODE_ENV === 'production') {
-    // 生产环境使用相对路径，通过_redirects重定向到Workers
-    return '/api';
+    // 生产环境暂时使用模拟API，等Workers部署后再更新
+    return process.env.REACT_APP_API_URL || '/api';
   } else {
     // 开发环境使用本地后端
     return 'http://localhost:3001/api/v1';

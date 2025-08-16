@@ -1,6 +1,0 @@
-# Cloudflare Pages重定向配置
-# API请求重定向到Workers
-/api/* https://dongshihui-api.your-subdomain.workers.dev/:splat 200
-
-# SPA路由支持
-/* /index.html 200
