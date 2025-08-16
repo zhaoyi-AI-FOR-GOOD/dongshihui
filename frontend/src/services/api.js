@@ -1,8 +1,19 @@
 import axios from 'axios';
 
+// 动态确定API基础URL
+const getBaseURL = () => {
+  if (process.env.NODE_ENV === 'production') {
+    // 生产环境使用相对路径，通过_redirects重定向到Workers
+    return '/api';
+  } else {
+    // 开发环境使用本地后端
+    return 'http://localhost:3001/api/v1';
+  }
+};
+
 // 创建axios实例
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api/v1',
+  baseURL: getBaseURL(),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

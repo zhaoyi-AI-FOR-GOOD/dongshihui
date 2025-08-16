@@ -1,0 +1,39 @@
+{
+  "name": "dongshihui",
+  "version": "1.0.0",
+  "description": "私人董事会系统 - 完整项目",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "build": "npm run build:frontend && npm run build:worker",
+    "build:frontend": "cd frontend && npm run build",
+    "build:worker": "cp workers/index.js dist/worker.js",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:pages": "cd frontend && npm run build && wrangler pages deploy build",
+    "db:init": "wrangler d1 execute dongshihui-db --file=./workers/schema.sql",
+    "db:init:dev": "wrangler d1 execute dongshihui-db-dev --local --file=./workers/schema.sql"
+  },
+  "keywords": [
+    "ai",
+    "claude",
+    "discussion",
+    "board",
+    "history",
+    "cloudflare",
+    "workers",
+    "pages"
+  ],
+  "author": "Private Board Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "wrangler": "^3.0.0"
+  },
+  "dependencies": {
+    "itty-router": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
