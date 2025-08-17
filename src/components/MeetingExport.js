@@ -242,15 +242,17 @@ const MeetingExport = ({ meetingId, meetingTitle, statementCount, onClose }) => 
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               内容预览（前200字符）：
             </Typography>
-            <Paper sx={{ p: 2, backgroundColor: '#f5f5f5', mb: 3 }}>
+            <Paper sx={{ p: 2, backgroundColor: '#f8f9fa', border: '1px solid #e0e0e0', mb: 3 }}>
               <Typography 
                 variant="body2" 
                 sx={{ 
                   fontFamily: 'monospace',
                   whiteSpace: 'pre-wrap',
-                  fontSize: '0.8em',
+                  fontSize: '0.85em',
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis'
+                  textOverflow: 'ellipsis',
+                  color: '#333',
+                  lineHeight: 1.5
                 }}
               >
                 {exportResult.content.substring(0, 200)}...
