@@ -29,7 +29,9 @@ import {
   Schedule as ScheduleIcon,
   Forum as ForumIcon,
   ArrowBack as ArrowBackIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Share as ShareIcon,
+  Summarize as SummarizeIcon
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -40,6 +42,8 @@ import { meetingAPI } from '../services/api';
 import QuestionBox from '../components/QuestionBox';
 import QuestionResponseList from '../components/QuestionResponseList';
 import FavoriteButton from '../components/FavoriteButton';
+import QuoteCard from '../components/QuoteCard';
+import MeetingSummary from '../components/MeetingSummary';
 
 const MeetingRoom = () => {
   const navigate = useNavigate();
@@ -50,6 +54,9 @@ const MeetingRoom = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
   const [questions, setQuestions] = useState([]);
+  const [showQuoteCard, setShowQuoteCard] = useState(false);
+  const [selectedStatementId, setSelectedStatementId] = useState(null);
+  const [showSummary, setShowSummary] = useState(false);
 
   // 获取会议详情
   const { data: meetingResponse, isLoading, error, refetch } = useQuery(
@@ -184,6 +191,12 @@ const MeetingRoom = () => {
     }
   }, [id, meeting]);
 
+  // 处理分享金句
+  const handleShareQuote = (statementId) => {
+    setSelectedStatementId(statementId);
+    setShowQuoteCard(true);
+  };
+
   // 自动滚动到底部
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -310,6 +323,17 @@ const MeetingRoom = () => {
               </Button>
             )}
             
+            {statements.length > 0 && (
+              <Button
+                variant="outlined"
+                startIcon={<SummarizeIcon />}
+                onClick={() => setShowSummary(true)}
+                color="info"
+              >
+                生成摘要
+              </Button>
+            )}
+            
             {!['finished'].includes(meeting.status) && (
               <Button
                 variant="outlined"
@@ -427,6 +451,13 @@ const MeetingRoom = () => {
                               statementId={statement.id}
                               favoriteType="statement"
                             />
+                            <IconButton
+                              size="small"
+                              onClick={() => handleShareQuote(statement.id)}
+                              title="生成金句卡片"
+                            >
+                              <ShareIcon />
+                            </IconButton>
                           </Box>
                           <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                             {statement.content}
@@ -536,6 +567,26 @@ const MeetingRoom = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* 金句卡片对话框 */}
+      {showQuoteCard && selectedStatementId && (
+        <QuoteCard 
+          statementId={selectedStatementId}
+          onClose={() => {
+            setShowQuoteCard(false);
+            setSelectedStatementId(null);
+          }}
+        />
+      )}
+
+      {/* 会议摘要对话框 */}
+      {showSummary && (
+        <MeetingSummary 
+          meetingId={id}
+          meetingTitle={meeting.title}
+          onClose={() => setShowSummary(false)}
+        />
+      )}
     </Container>
   );
 };
