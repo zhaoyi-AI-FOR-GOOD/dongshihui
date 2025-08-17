@@ -47,6 +47,8 @@ const CreateMeeting = () => {
   });
   
   const [selectedDirectors, setSelectedDirectors] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [showGroupSelection, setShowGroupSelection] = useState(false);
 
   // 获取活跃董事列表
   const { data: directorsResponse, isLoading: directorsLoading } = useQuery(
@@ -60,6 +62,22 @@ const CreateMeeting = () => {
   );
 
   const directors = directorsResponse?.data?.data || [];
+
+  // 获取董事组合列表
+  const { data: groupsResponse, isLoading: groupsLoading } = useQuery(
+    'directorGroups',
+    async () => {
+      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/director-groups?user_id=default_user`);
+      return response.json();
+    },
+    {
+      onError: (err) => {
+        console.error('获取董事组合失败:', err);
+      }
+    }
+  );
+
+  const directorGroups = groupsResponse?.data || [];
 
   // 创建会议
   const createMutation = useMutation(
@@ -107,6 +125,29 @@ const CreateMeeting = () => {
         ...prev,
         director_ids: [...prev.director_ids, director.id]
       }));
+    }
+  };
+
+  // 处理选择董事组合
+  const handleSelectGroup = async (group) => {
+    try {
+      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/director-groups/${group.id}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        const groupDirectors = result.data.members.map(m => m.director);
+        setSelectedDirectors(groupDirectors);
+        setFormData(prev => ({
+          ...prev,
+          director_ids: groupDirectors.map(d => d.id)
+        }));
+        setSelectedGroup(group);
+        setShowGroupSelection(false);
+        toast.success(`已选择组合：${group.name}`);
+      }
+    } catch (error) {
+      console.error('获取组合详情失败:', error);
+      toast.error('获取组合详情失败');
     }
   };
 

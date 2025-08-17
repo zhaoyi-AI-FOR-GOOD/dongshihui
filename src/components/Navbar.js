@@ -13,7 +13,8 @@ import {
   AccountBalance as MeetingIcon,
   History as HistoryIcon,
   Add as AddIcon,
-  Favorite as FavoriteIcon
+  Favorite as FavoriteIcon,
+  Group as GroupIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -41,6 +42,11 @@ const Navbar = () => {
       label: '我的收藏', 
       path: '/favorites', 
       icon: <FavoriteIcon /> 
+    },
+    { 
+      label: '董事组合', 
+      path: '/director-groups', 
+      icon: <GroupIcon /> 
     },
   ];
 
