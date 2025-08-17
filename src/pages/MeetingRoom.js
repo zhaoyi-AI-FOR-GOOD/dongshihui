@@ -442,28 +442,63 @@ const MeetingRoom = () => {
                       )}
                       
                       {/* 发言内容 */}
-                      <Card sx={{ mb: 2 }}>
-                        <CardContent sx={{ p: 2 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Card sx={{ 
+                        mb: 3,
+                        backgroundColor: isUserQuestion ? '#E3F2FD' : '#FAFAFA',
+                        border: isUserQuestion ? '2px solid #1565C0' : '1px solid #E0E0E0',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+                          transform: 'translateY(-1px)'
+                        }
+                      }}>
+                        <CardContent sx={{ p: 3 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                             <Avatar 
                               src={isUserQuestion ? null : director?.avatar_url}
                               sx={{ 
-                                width: 32, 
-                                height: 32, 
+                                width: 40, 
+                                height: 40, 
                                 mr: 2,
-                                backgroundColor: isUserQuestion ? '#2196f3' : undefined
+                                backgroundColor: isUserQuestion ? '#1565C0' : '#F57C00',
+                                border: '3px solid #fff',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                               }}
                             >
                               <PersonIcon />
                             </Avatar>
                             <Box sx={{ flex: 1 }}>
-                              <Typography variant="subtitle2">
+                              <Typography 
+                                variant="subtitle1" 
+                                sx={{ 
+                                  fontWeight: 600,
+                                  color: isUserQuestion ? '#1565C0' : '#333',
+                                  fontSize: '1.1rem'
+                                }}
+                              >
                                 {isUserQuestion ? '用户提问' : director?.name}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography 
+                                variant="body2" 
+                                sx={{ 
+                                  color: '#666',
+                                  fontWeight: 500,
+                                  fontSize: '0.9rem'
+                                }}
+                              >
                                 {isUserQuestion ? '会议参与者' : director?.title}
                                 {statement.created_at && (
-                                  <> · {format(new Date(statement.created_at), 'HH:mm', { locale: zhCN })}</>
+                                  <Typography 
+                                    component="span" 
+                                    sx={{ 
+                                      ml: 1, 
+                                      color: '#888',
+                                      fontWeight: 600,
+                                      fontSize: '0.85rem'
+                                    }}
+                                  >
+                                    · {format(new Date(statement.created_at), 'HH:mm', { locale: zhCN })}
+                                  </Typography>
                                 )}
                               </Typography>
                             </Box>
@@ -492,7 +527,18 @@ const MeetingRoom = () => {
                               </>
                             )}
                           </Box>
-                          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                          <Typography 
+                            variant="body1" 
+                            sx={{ 
+                              whiteSpace: 'pre-wrap',
+                              fontSize: isUserQuestion ? '1rem' : '1.1rem',
+                              lineHeight: 1.7,
+                              color: isUserQuestion ? '#1565C0' : '#333',
+                              fontWeight: isUserQuestion ? 500 : 400,
+                              letterSpacing: '0.02em',
+                              mt: 1
+                            }}
+                          >
                             {statement.content}
                           </Typography>
                         </CardContent>
