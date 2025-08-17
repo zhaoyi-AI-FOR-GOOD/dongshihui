@@ -442,11 +442,7 @@ const MeetingRoom = () => {
                       )}
                       
                       {/* 发言内容 */}
-                      <Card sx={{ 
-                        mb: 2, 
-                        backgroundColor: isUserQuestion ? '#f0f7ff' : 'background.paper',
-                        border: isUserQuestion ? '2px solid #1976d2' : 'none'
-                      }}>
+                      <Card sx={{ mb: 2 }}>
                         <CardContent sx={{ p: 2 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                             <Avatar 
@@ -455,7 +451,7 @@ const MeetingRoom = () => {
                                 width: 32, 
                                 height: 32, 
                                 mr: 2,
-                                backgroundColor: isUserQuestion ? '#1976d2' : undefined
+                                backgroundColor: isUserQuestion ? '#2196f3' : undefined
                               }}
                             >
                               <PersonIcon />
