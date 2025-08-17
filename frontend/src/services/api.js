@@ -4,7 +4,7 @@ import axios from 'axios';
 const getBaseURL = () => {
   if (process.env.NODE_ENV === 'production') {
     // 生产环境使用Workers API
-    return process.env.REACT_APP_API_URL || 'https://dongshihui-api.jieshu2023.workers.dev/api/v1';
+    return process.env.REACT_APP_API_URL || 'https://dongshihui-api.jieshu2023.workers.dev';
   } else {
     // 开发环境使用本地后端
     return 'http://localhost:3001/api/v1';
