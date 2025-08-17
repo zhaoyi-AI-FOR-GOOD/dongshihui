@@ -187,7 +187,14 @@ Return only JSON, no other text.`
         let parsedDirector;
         
         try {
-          const content = claudeData.content[0].text;
+          let content = claudeData.content[0].text;
+          // 如果内容被包在代码块中，提取JSON部分
+          if (content.includes('```json')) {
+            const match = content.match(/```json\s*([\s\S]*?)\s*```/);
+            if (match) {
+              content = match[1];
+            }
+          }
           parsedDirector = JSON.parse(content);
         } catch (parseError) {
           return new Response(JSON.stringify({ 
