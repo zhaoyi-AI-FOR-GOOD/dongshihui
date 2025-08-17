@@ -60,10 +60,10 @@ const QuestionResponseList = ({ questions = [], onQuestionsUpdate }) => {
                 </Box>
               </Box>
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                {formatDistanceToNow(new Date(question.created_at), { 
+                {question.created_at ? formatDistanceToNow(new Date(question.created_at), { 
                   addSuffix: true, 
                   locale: zhCN 
-                })}
+                }) : '时间未知'}
               </Typography>
             </Box>
           </AccordionSummary>
