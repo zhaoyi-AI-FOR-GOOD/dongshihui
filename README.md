@@ -1,91 +1,71 @@
-# 私人董事会系统 (Private Board System)
+# 私人董事会系统 - 前端
 
-一个创新的AI驱动的虚拟董事会系统，让历史人物通过Claude AI"复活"参与现代讨论。
-
-## 项目概述
-
-通过输入历史人物的人设提示词，系统可以：
-- 自动生成董事的基本信息和特征
-- 创建智能的会议讨论系统
-- 支持多个历史人物同时参与辩论
-- 实时展示讨论过程和结果
-
-## 技术架构
-
-- **后端**: Node.js + Express + PostgreSQL
-- **前端**: React + Modern UI Components  
-- **AI集成**: Claude API (Anthropic)
-- **实时通信**: WebSocket
-- **数据库**: PostgreSQL
+基于React的私人董事会系统前端界面，让历史人物通过AI参与现代讨论。
 
 ## 功能特性
 
-### 核心功能
-- 🎭 **智能董事创建**: 通过提示词自动生成历史人物特征
-- 🏛️ **虚拟董事会**: 创建和管理虚拟董事会会议
-- 💬 **智能讨论引擎**: AI驱动的多轮对话和辩论系统
-- 📊 **实时会议室**: WebSocket实现的实时讨论界面
-- 📁 **会议记录**: 完整的讨论历史和导出功能
+- 🎭 智能董事创建和管理
+- 🏛️ 会议系统（创建、管理、实时讨论）
+- 💬 AI驱动的历史人物对话
+- 📱 响应式设计，支持移动端
 
-### 高级功能
-- 🔄 **动态董事管理**: 随时添加、替换、停用董事
-- 📝 **提示词模板**: 预设的历史人物类型模板
-- 🎯 **讨论模式切换**: 轮转、辩论、聚焦模式智能切换
-- 📈 **使用分析**: 董事参与度和讨论质量分析
+## 技术栈
 
-## 开发计划
+- **React 18** + **Material-UI** 
+- **React Query** 数据管理
+- **React Router** 路由
+- **Axios** API调用
+- **React Hot Toast** 消息提示
 
-1. [x] 项目架构设计
-2. [ ] 数据库设计和连接
-3. [ ] 董事管理API开发
-4. [ ] Claude API集成
-5. [ ] 前端界面开发
-6. [ ] 会议系统开发
-7. [ ] 实时通信集成
-8. [ ] 测试和部署
+## 本地开发
 
-## 快速开始
-
-### 环境要求
-- Node.js 18+
-- PostgreSQL 13+
-- Claude API Key
-
-### 安装依赖
 ```bash
-# 后端依赖
-cd backend && npm install
-
-# 前端依赖  
-cd frontend && npm install
+npm install
+npm start
 ```
 
-### 环境配置
-```bash
-# 复制环境变量模板
-cp backend/.env.example backend/.env
+访问 http://localhost:3000
 
-# 配置必要的环境变量
-CLAUDE_API_KEY=your_claude_api_key_here
-DATABASE_URL=postgresql://username:password@localhost:5432/private_board
+## 部署
+
+自动部署到 Cloudflare Pages，连接GitHub仓库。
+
+## API配置
+
+后端API仓库：https://github.com/zhaoyi-AI-FOR-GOOD/dongshihui-api
+
+生产环境API：https://dongshihui-api.jieshu2023.workers.dev
+
+## 项目结构
+
+```
+src/
+├── components/        # 可复用组件
+│   └── Navbar.js     # 导航栏
+├── pages/            # 页面组件
+│   ├── BoardHall.js      # 董事会大厅
+│   ├── CreateDirector.js # 创建董事
+│   ├── CreateMeeting.js  # 创建会议
+│   ├── DirectorManager.js # 董事管理
+│   ├── MeetingRoom.js    # 会议室
+│   └── ...
+├── services/         # API服务
+│   └── api.js       # API接口封装
+├── App.js           # 主应用组件
+└── index.js         # 应用入口
 ```
 
-### 运行项目
-```bash
-# 启动后端服务 (端口 3001)
-cd backend && npm run dev
+## 使用说明
 
-# 启动前端开发服务器 (端口 3000)
-cd frontend && npm start
-```
+1. 访问首页，查看董事会大厅
+2. 创建AI董事（输入历史人物描述）
+3. 发起新会议，选择参与董事
+4. 开始会议，观看AI董事自动讨论
 
-## 贡献指南
+## 相关仓库
 
-欢迎提交 Issues 和 Pull Requests！
-
-## 许可证
-
-MIT License
+- 后端API：[dongshihui-api](https://github.com/zhaoyi-AI-FOR-GOOD/dongshihui-api)
+- 前端界面：[dongshihui](https://github.com/zhaoyi-AI-FOR-GOOD/dongshihui)（当前仓库）
 
 ---
 

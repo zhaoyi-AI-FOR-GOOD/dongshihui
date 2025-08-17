@@ -1,6 +1,0 @@
-TIMESTAMP: 2025-08-16 20:27:00
-LATEST_COMMIT: 071d410d40b3cfb5f819bea6dcb40c04cd136321
-FORCE_SYNC: TRUE
-
-This file forces Cloudflare to sync latest commit.
-Cloudflare should read commit 071d410, not 47e59f9.
