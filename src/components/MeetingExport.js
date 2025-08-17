@@ -199,47 +199,47 @@ const MeetingExport = ({ meetingId, meetingTitle, statementCount, onClose }) => 
               会议记录导出成功！包含 {exportResult.meeting_info.statement_count} 条发言记录
             </Alert>
 
-            <Paper sx={{ p: 2, mb: 3, backgroundColor: '#f8f9fa' }}>
-              <Typography variant="subtitle2" gutterBottom>
+            <Paper sx={{ p: 2, mb: 3, backgroundColor: '#ffffff', border: '1px solid #e0e0e0' }}>
+              <Typography variant="subtitle2" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
                 导出统计信息
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={3}>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{ color: '#666' }}>
                     发言数
                   </Typography>
-                  <Typography variant="h6">
+                  <Typography variant="h6" sx={{ color: '#333' }}>
                     {exportResult.meeting_info.statement_count}
                   </Typography>
                 </Grid>
                 <Grid item xs={3}>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{ color: '#666' }}>
                     董事数
                   </Typography>
-                  <Typography variant="h6">
+                  <Typography variant="h6" sx={{ color: '#333' }}>
                     {exportResult.meeting_info.participant_count}
                   </Typography>
                 </Grid>
                 <Grid item xs={3}>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{ color: '#666' }}>
                     提问数
                   </Typography>
-                  <Typography variant="h6">
+                  <Typography variant="h6" sx={{ color: '#333' }}>
                     {exportResult.meeting_info.question_count}
                   </Typography>
                 </Grid>
                 <Grid item xs={3}>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{ color: '#666' }}>
                     格式
                   </Typography>
-                  <Typography variant="h6">
+                  <Typography variant="h6" sx={{ color: '#333' }}>
                     {exportType.toUpperCase()}
                   </Typography>
                 </Grid>
               </Grid>
             </Paper>
 
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="body2" sx={{ mb: 2, color: '#555', fontWeight: 500 }}>
               内容预览（前200字符）：
             </Typography>
             <Paper sx={{ p: 2, backgroundColor: '#f8f9fa', border: '1px solid #e0e0e0', mb: 3 }}>
