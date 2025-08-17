@@ -37,6 +37,8 @@ import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { meetingAPI } from '../services/api';
+import QuestionBox from '../components/QuestionBox';
+import QuestionResponseList from '../components/QuestionResponseList';
 
 const MeetingRoom = () => {
   const navigate = useNavigate();
@@ -46,6 +48,7 @@ const MeetingRoom = () => {
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
+  const [questions, setQuestions] = useState([]);
 
   // 获取会议详情
   const { data: meetingResponse, isLoading, error, refetch } = useQuery(
@@ -155,6 +158,30 @@ const MeetingRoom = () => {
     setIsGenerating(true);
     generateMutation.mutate();
   };
+
+  // 处理用户提问
+  const handleQuestionSubmitted = (questionData) => {
+    setQuestions(prev => [questionData, ...prev]);
+    toast.success('提问已提交，董事们正在思考回应...');
+  };
+
+  // 获取会议问题列表
+  useEffect(() => {
+    if (id && meeting) {
+      const fetchQuestions = async () => {
+        try {
+          const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${id}/questions`);
+          const result = await response.json();
+          if (result.success) {
+            setQuestions(result.data);
+          }
+        } catch (error) {
+          console.error('获取问题列表失败:', error);
+        }
+      };
+      fetchQuestions();
+    }
+  }, [id, meeting]);
 
   // 自动滚动到底部
   useEffect(() => {
@@ -410,8 +437,23 @@ const MeetingRoom = () => {
           </Paper>
         </Grid>
 
-        {/* 右侧：会议信息 */}
+        {/* 右侧：会议信息和互动 */}
         <Grid item xs={12} md={4}>
+          {/* 用户提问区域 */}
+          {['discussing', 'debating', 'paused'].includes(meeting.status) && (
+            <QuestionBox 
+              meetingId={id} 
+              onQuestionSubmitted={handleQuestionSubmitted}
+            />
+          )}
+          
+          {/* 问题和回应列表 */}
+          {questions.length > 0 && (
+            <Paper sx={{ p: 2, mb: 3, maxHeight: '40vh', overflow: 'auto' }}>
+              <QuestionResponseList questions={questions} />
+            </Paper>
+          )}
+
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
               会议统计
