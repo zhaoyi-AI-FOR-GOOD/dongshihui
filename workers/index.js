@@ -76,11 +76,11 @@ export default {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-api-key': env.CLAUDE_API_KEY.trim(),
+              'Authorization': `Bearer ${env.CLAUDE_API_KEY}`,
               'anthropic-version': '2023-06-01'
             },
             body: JSON.stringify({
-              model: 'claude-3-haiku-20240307',
+              model: 'claude-sonnet-4-20250514',
               max_tokens: 10,
               messages: [{ role: 'user', content: 'Hi' }]
             })
@@ -144,11 +144,11 @@ export default {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': env.CLAUDE_API_KEY.trim(),
+            'Authorization': `Bearer ${env.CLAUDE_API_KEY}`,
             'anthropic-version': '2023-06-01'
           },
           body: JSON.stringify({
-            model: 'claude-3-haiku-20240307',
+            model: 'claude-sonnet-4-20250514',
             max_tokens: 1000,
             messages: [{
               role: 'user',
