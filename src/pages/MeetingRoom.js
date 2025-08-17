@@ -39,6 +39,7 @@ import toast from 'react-hot-toast';
 import { meetingAPI } from '../services/api';
 import QuestionBox from '../components/QuestionBox';
 import QuestionResponseList from '../components/QuestionResponseList';
+import FavoriteButton from '../components/FavoriteButton';
 
 const MeetingRoom = () => {
   const navigate = useNavigate();
@@ -422,6 +423,10 @@ const MeetingRoom = () => {
                             {statement.content_type === 'closing' && (
                               <Chip label="结语" size="small" color="error" />
                             )}
+                            <FavoriteButton
+                              statementId={statement.id}
+                              favoriteType="statement"
+                            />
                           </Box>
                           <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                             {statement.content}

@@ -12,7 +12,8 @@ import {
   People as PeopleIcon,
   AccountBalance as MeetingIcon,
   History as HistoryIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  Favorite as FavoriteIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -35,6 +36,11 @@ const Navbar = () => {
       label: '会议历史', 
       path: '/meetings', 
       icon: <HistoryIcon /> 
+    },
+    { 
+      label: '我的收藏', 
+      path: '/favorites', 
+      icon: <FavoriteIcon /> 
     },
   ];
 

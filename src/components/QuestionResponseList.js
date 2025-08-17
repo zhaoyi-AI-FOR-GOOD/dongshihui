@@ -17,6 +17,7 @@ import {
 } from '@mui/icons-material';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import FavoriteButton from './FavoriteButton';
 
 const QuestionResponseList = ({ questions = [] }) => {
   if (questions.length === 0) {
@@ -86,7 +87,7 @@ const QuestionResponseList = ({ questions = [] }) => {
                       >
                         {response.director.name?.[0]}
                       </Avatar>
-                      <Box>
+                      <Box sx={{ flex: 1 }}>
                         <Typography variant="subtitle2">
                           {response.director.name}
                         </Typography>
@@ -94,6 +95,10 @@ const QuestionResponseList = ({ questions = [] }) => {
                           {response.director.title}
                         </Typography>
                       </Box>
+                      <FavoriteButton
+                        responseId={response.id}
+                        favoriteType="response"
+                      />
                     </Box>
                     <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
                       {response.content}

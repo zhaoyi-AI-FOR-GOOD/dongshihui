@@ -9,6 +9,7 @@ import DirectorDetails from './pages/DirectorDetails';
 import MeetingRoom from './pages/MeetingRoom';
 import MeetingHistory from './pages/MeetingHistory';
 import CreateMeeting from './pages/CreateMeeting';
+import FavoritesPage from './pages/FavoritesPage';
 
 function App() {
   return (
@@ -38,6 +39,9 @@ function App() {
           <Route path="/meetings/create" element={<CreateMeeting />} />
           <Route path="/meeting/:id" element={<MeetingRoom />} />
           <Route path="/meetings" element={<MeetingHistory />} />
+          
+          {/* 收藏系统 */}
+          <Route path="/favorites" element={<FavoritesPage />} />
           
           {/* 404页面 */}
           <Route path="*" element={<Navigate to="/hall" replace />} />
