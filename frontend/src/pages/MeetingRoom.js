@@ -76,6 +76,12 @@ const MeetingRoom = () => {
       onSuccess: () => {
         toast.success('会议已开始！');
         refetch();
+        // 会议开始后，自动生成第一个发言
+        setTimeout(() => {
+          if (!isGenerating) {
+            handleGenerateNext();
+          }
+        }, 1000);
       },
       onError: (err) => {
         toast.error('开始会议失败: ' + err.message);

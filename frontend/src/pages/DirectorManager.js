@@ -58,12 +58,7 @@ const DirectorManager = () => {
   // 获取董事列表
   const { data: directorsResponse, isLoading } = useQuery(
     ['directors', page, rowsPerPage, search],
-    () => directorAPI.getAll({
-      limit: rowsPerPage,
-      offset: page * rowsPerPage,
-      search,
-      status: 'all'
-    }),
+    () => directorAPI.getAll(),
     {
       onError: (err) => {
         toast.error('获取董事列表失败: ' + err.message);
@@ -71,8 +66,17 @@ const DirectorManager = () => {
     }
   );
 
-  const directors = directorsResponse?.data?.data?.directors || [];
-  const total = directorsResponse?.data?.data?.total || 0;
+  const allDirectors = directorsResponse?.data?.data || [];
+  
+  // 前端过滤和分页
+  const filteredDirectors = allDirectors.filter(director => 
+    !search || 
+    director.name.toLowerCase().includes(search.toLowerCase()) ||
+    director.title.toLowerCase().includes(search.toLowerCase())
+  );
+  
+  const directors = filteredDirectors.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
+  const total = filteredDirectors.length;
 
   // 删除董事
   const deleteMutation = useMutation(
@@ -296,9 +300,12 @@ const DirectorManager = () => {
                         <Typography variant="subtitle2">
                           {director.name}
                         </Typography>
-                        {director.expertise_areas && director.expertise_areas.length > 0 && (
+                        {director.expertise_areas && (
                           <Typography variant="caption" color="text.secondary">
-                            {director.expertise_areas.slice(0, 2).join(', ')}
+                            {(typeof director.expertise_areas === 'string' 
+                              ? JSON.parse(director.expertise_areas) 
+                              : director.expertise_areas
+                            ).slice(0, 2).join(', ')}
                           </Typography>
                         )}
                       </Box>
