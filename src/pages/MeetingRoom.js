@@ -173,11 +173,9 @@ const MeetingRoom = () => {
   // 处理用户提问
   const handleQuestionSubmitted = (questionData) => {
     setQuestions(prev => [questionData, ...prev]);
-    toast.success('提问已提交，董事们正在思考回应...');
-    // 3秒后刷新问题列表，获取董事回应
-    setTimeout(() => {
-      fetchQuestions();
-    }, 3000);
+    toast.success('提问已提交，点击"下一个发言"让董事回应...');
+    // 刷新会议数据以显示用户问题在讨论记录中
+    refetch();
   };
 
   // 获取问题列表的函数
@@ -424,6 +422,7 @@ const MeetingRoom = () => {
                 statements.map((statement, index) => {
                   const director = statement.Director;
                   const isNewRound = index === 0 || statement.round_number !== statements[index - 1]?.round_number;
+                  const isUserQuestion = statement.content_type === 'user_question';
                   
                   return (
                     <React.Fragment key={statement.id}>
@@ -441,21 +440,30 @@ const MeetingRoom = () => {
                       )}
                       
                       {/* 发言内容 */}
-                      <Card sx={{ mb: 2 }}>
+                      <Card sx={{ 
+                        mb: 2, 
+                        backgroundColor: isUserQuestion ? '#f0f7ff' : 'background.paper',
+                        border: isUserQuestion ? '2px solid #1976d2' : 'none'
+                      }}>
                         <CardContent sx={{ p: 2 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                             <Avatar 
-                              src={director?.avatar_url}
-                              sx={{ width: 32, height: 32, mr: 2 }}
+                              src={isUserQuestion ? null : director?.avatar_url}
+                              sx={{ 
+                                width: 32, 
+                                height: 32, 
+                                mr: 2,
+                                backgroundColor: isUserQuestion ? '#1976d2' : undefined
+                              }}
                             >
                               <PersonIcon />
                             </Avatar>
                             <Box sx={{ flex: 1 }}>
                               <Typography variant="subtitle2">
-                                {director?.name}
+                                {isUserQuestion ? '用户提问' : director?.name}
                               </Typography>
                               <Typography variant="caption" color="text.secondary">
-                                {director?.title}
+                                {isUserQuestion ? '会议参与者' : director?.title}
                                 {statement.created_at && (
                                   <> · {format(new Date(statement.created_at), 'HH:mm', { locale: zhCN })}</>
                                 )}
@@ -467,17 +475,24 @@ const MeetingRoom = () => {
                             {statement.content_type === 'closing' && (
                               <Chip label="结语" size="small" color="error" />
                             )}
-                            <FavoriteButton
-                              statementId={statement.id}
-                              favoriteType="statement"
-                            />
-                            <IconButton
-                              size="small"
-                              onClick={() => handleShareQuote(statement.id)}
-                              title="生成金句卡片"
-                            >
-                              <ShareIcon />
-                            </IconButton>
+                            {statement.content_type === 'user_question' && (
+                              <Chip label="用户提问" size="small" color="info" />
+                            )}
+                            {!isUserQuestion && (
+                              <>
+                                <FavoriteButton
+                                  statementId={statement.id}
+                                  favoriteType="statement"
+                                />
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleShareQuote(statement.id)}
+                                  title="生成金句卡片"
+                                >
+                                  <ShareIcon />
+                                </IconButton>
+                              </>
+                            )}
                           </Box>
                           <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                             {statement.content}
