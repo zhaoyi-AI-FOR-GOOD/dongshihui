@@ -395,7 +395,7 @@ const DirectorManager = () => {
         onClose={() => setActionMenu({ anchorEl: null, director: null })}
       >
         <MenuItem onClick={() => {
-          navigate(`/directors/${actionMenu.director.id}/stats`);
+          navigate(`/directors/details/${actionMenu.director.id}`);
           setActionMenu({ anchorEl: null, director: null });
         }}>
           查看统计
