@@ -31,7 +31,8 @@ import {
   ArrowBack as ArrowBackIcon,
   Settings as SettingsIcon,
   Share as ShareIcon,
-  Summarize as SummarizeIcon
+  Summarize as SummarizeIcon,
+  Download as DownloadIcon
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -44,6 +45,7 @@ import QuestionResponseList from '../components/QuestionResponseList';
 import FavoriteButton from '../components/FavoriteButton';
 import QuoteCard from '../components/QuoteCard';
 import MeetingSummary from '../components/MeetingSummary';
+import MeetingExport from '../components/MeetingExport';
 
 const MeetingRoom = () => {
   const navigate = useNavigate();
@@ -57,6 +59,7 @@ const MeetingRoom = () => {
   const [showQuoteCard, setShowQuoteCard] = useState(false);
   const [selectedStatementId, setSelectedStatementId] = useState(null);
   const [showSummary, setShowSummary] = useState(false);
+  const [showExport, setShowExport] = useState(false);
 
   // 获取会议详情
   const { data: meetingResponse, isLoading, error, refetch } = useQuery(
@@ -324,14 +327,24 @@ const MeetingRoom = () => {
             )}
             
             {statements.length > 0 && (
-              <Button
-                variant="outlined"
-                startIcon={<SummarizeIcon />}
-                onClick={() => setShowSummary(true)}
-                color="info"
-              >
-                生成摘要
-              </Button>
+              <>
+                <Button
+                  variant="outlined"
+                  startIcon={<SummarizeIcon />}
+                  onClick={() => setShowSummary(true)}
+                  color="info"
+                >
+                  生成摘要
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<DownloadIcon />}
+                  onClick={() => setShowExport(true)}
+                  color="secondary"
+                >
+                  导出全文
+                </Button>
+              </>
             )}
             
             {!['finished'].includes(meeting.status) && (
@@ -585,6 +598,16 @@ const MeetingRoom = () => {
           meetingId={id}
           meetingTitle={meeting.title}
           onClose={() => setShowSummary(false)}
+        />
+      )}
+
+      {/* 全文导出对话框 */}
+      {showExport && (
+        <MeetingExport 
+          meetingId={id}
+          meetingTitle={meeting.title}
+          statementCount={statements.length}
+          onClose={() => setShowExport(false)}
         />
       )}
     </Container>
