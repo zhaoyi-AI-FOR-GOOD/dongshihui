@@ -195,11 +195,11 @@ ${summary.next_steps.map((step, index) => `${index + 1}. ${step}`).join('\n') ||
         ) : summary && (
           <Box>
             {/* 执行摘要 */}
-            <Paper sx={{ p: 3, mb: 3, backgroundColor: '#f8f9fa' }}>
-              <Typography variant="h6" gutterBottom color="primary">
+            <Paper sx={{ p: 3, mb: 3, backgroundColor: '#f8f9fa', border: '1px solid #e0e0e0' }}>
+              <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
                 执行摘要
               </Typography>
-              <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+              <Typography variant="body1" sx={{ lineHeight: 1.6, color: '#333' }}>
                 {summary.executive_summary}
               </Typography>
             </Paper>

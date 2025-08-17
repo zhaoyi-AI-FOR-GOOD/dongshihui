@@ -174,22 +174,29 @@ const MeetingRoom = () => {
   const handleQuestionSubmitted = (questionData) => {
     setQuestions(prev => [questionData, ...prev]);
     toast.success('提问已提交，董事们正在思考回应...');
+    // 3秒后刷新问题列表，获取董事回应
+    setTimeout(() => {
+      fetchQuestions();
+    }, 3000);
+  };
+
+  // 获取问题列表的函数
+  const fetchQuestions = async () => {
+    if (!id) return;
+    try {
+      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${id}/questions`);
+      const result = await response.json();
+      if (result.success) {
+        setQuestions(result.data);
+      }
+    } catch (error) {
+      console.error('获取问题列表失败:', error);
+    }
   };
 
   // 获取会议问题列表
   useEffect(() => {
     if (id && meeting) {
-      const fetchQuestions = async () => {
-        try {
-          const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${id}/questions`);
-          const result = await response.json();
-          if (result.success) {
-            setQuestions(result.data);
-          }
-        } catch (error) {
-          console.error('获取问题列表失败:', error);
-        }
-      };
       fetchQuestions();
     }
   }, [id, meeting]);
