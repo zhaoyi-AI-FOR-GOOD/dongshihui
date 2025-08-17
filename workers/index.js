@@ -38,7 +38,7 @@ export default {
             'anthropic-version': '2023-06-01'
           },
           body: JSON.stringify({
-            model: 'claude-3-sonnet-20240229',
+            model: 'claude-sonnet-4-20250514',
             max_tokens: 10,
             messages: [{ role: 'user', content: 'Hi' }]
           })
