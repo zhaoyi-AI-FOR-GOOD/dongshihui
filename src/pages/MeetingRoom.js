@@ -175,7 +175,9 @@ const MeetingRoom = () => {
     setQuestions(prev => [questionData, ...prev]);
     toast.success('提问已提交，点击"下一个发言"让董事回应...');
     // 刷新会议数据以显示用户问题在讨论记录中
-    refetch();
+    setTimeout(() => {
+      refetch();
+    }, 1000);
   };
 
   // 获取问题列表的函数
