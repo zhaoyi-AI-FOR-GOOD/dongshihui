@@ -74,7 +74,7 @@ const Navbar = () => {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            私人董事会系统
+            私人董事会
           </Typography>
         </Box>
 

@@ -38,7 +38,6 @@ const CreateMeeting = () => {
   // 表单状态
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
     topic: '',
     discussion_mode: 'round_robin',
     max_rounds: 5,
@@ -211,16 +210,6 @@ const CreateMeeting = () => {
                 placeholder="例如：关于人工智能发展的董事会讨论"
               />
               
-              <TextField
-                fullWidth
-                label="会议描述"
-                multiline
-                rows={3}
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                sx={{ mb: 2 }}
-                placeholder="可选的会议背景和目标描述"
-              />
               
               <TextField
                 fullWidth
@@ -230,7 +219,7 @@ const CreateMeeting = () => {
                 value={formData.topic}
                 onChange={(e) => handleInputChange('topic', e.target.value)}
                 required
-                placeholder="请详细描述要讨论的核心问题，例如：&#10;&#10;在人工智能快速发展的今天，我们应该如何平衡技术进步与人类价值观的保护？AI技术的普及会对社会结构产生什么样的深远影响？"
+                placeholder="请描述你想讨论的问题..."
                 helperText="详细的话题描述将帮助董事们更好地进行讨论"
               />
             </Paper>

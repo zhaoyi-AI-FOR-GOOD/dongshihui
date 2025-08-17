@@ -203,12 +203,11 @@ const BoardHall = () => {
         </Typography>
         
         <Typography variant="h6" color="text.secondary" gutterBottom>
-          与历史伟人共商天下事
+          与历史人物共商大事
         </Typography>
         
         <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
-          在这里，您可以邀请历史上的杰出人物加入您的董事会，
-          就现代问题进行深入的讨论和辩论。
+          在这里，你可以邀请历史上的有趣人物加入你的私人董事会，就任何问题进行深入的讨论。
         </Typography>
       </Box>
 
