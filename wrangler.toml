@@ -13,6 +13,6 @@ database_id = "741c830e-ffcf-4231-b104-90af2d90da59"
 binding = "KV"
 id = "7cea8217ea1f466ba3de2a323ea2c8a1"
 
-# 环境变量
+# 环境变量 (敏感信息请在Cloudflare Dashboard中配置)
 [vars]
 NODE_ENV = "production"
