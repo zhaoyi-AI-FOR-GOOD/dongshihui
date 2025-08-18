@@ -191,11 +191,31 @@ const MeetingRoom = () => {
   // 处理用户提问
   const handleQuestionSubmitted = (questionData) => {
     setQuestions(prev => [questionData, ...prev]);
-    toast.success('提问已提交，点击"下一个发言"让董事回应...');
-    // 刷新会议数据以显示用户问题在讨论记录中
-    setTimeout(() => {
-      refetch();
-    }, 1000);
+    
+    // 根据提问类型显示不同的提示
+    const isAllDirectorQuestion = questionData.question_scope === 'all';
+    if (isAllDirectorQuestion) {
+      toast.success(`提问已提交，${participants.length}位董事正在依次回应...`);
+      
+      // 全员提问：定期刷新以显示每位董事的发言
+      let refreshCount = 0;
+      const maxRefreshes = participants.length + 1; // 多一次最终刷新
+      
+      const intervalRefresh = setInterval(() => {
+        refreshCount++;
+        refetch();
+        
+        if (refreshCount >= maxRefreshes) {
+          clearInterval(intervalRefresh);
+        }
+      }, 3500); // 每3.5秒刷新一次
+      
+    } else {
+      toast.success('提问已提交，指定董事正在回应...');
+      setTimeout(() => {
+        refetch();
+      }, 3500);
+    }
   };
 
   // 获取问题列表的函数
