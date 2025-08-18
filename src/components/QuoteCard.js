@@ -129,216 +129,157 @@ const QuoteCard = ({ statementId, onClose }) => {
     
     setIsGeneratingImage(true);
     try {
-      // 创建完全独立的iframe来隔离CSS
-      const iframe = document.createElement('iframe');
-      iframe.style.cssText = `
-        position: fixed;
-        top: -9999px;
-        left: -9999px;
-        width: 480px;
-        height: 600px;
-        border: none;
-        visibility: hidden;
-      `;
-      document.body.appendChild(iframe);
+      // 完全抛弃html2canvas，使用纯Canvas API手绘
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
       
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      // 设置高清画布
+      const scale = 2;
+      const width = 480;
+      const height = 600;
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.scale(scale, scale);
       
-      // 写入完全独立的HTML和CSS
-      iframeDoc.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <style>
-            * { 
-              margin: 0; 
-              padding: 0; 
-              box-sizing: border-box; 
-              font-family: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif;
-            }
-            *::before, *::after { 
-              display: none !important; 
-              content: none !important; 
-            }
-            body { 
-              width: 480px; 
-              min-height: 600px; 
-              padding: 30px; 
-              background: linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(25, 118, 210, 0.05) 100%);
-              border: 2px solid #1976d2;
-              border-radius: 12px;
-              position: relative;
-              overflow: hidden;
-              color: #333;
-            }
-            .decor { 
-              position: absolute; 
-              top: -30px; 
-              right: -30px; 
-              width: 160px; 
-              height: 160px; 
-              background: radial-gradient(circle, rgba(25, 118, 210, 0.05) 0%, transparent 70%); 
-              border-radius: 50%; 
-            }
-            .header { 
-              display: flex; 
-              justify-content: space-between; 
-              align-items: center; 
-              margin-bottom: 24px; 
-            }
-            .category { 
-              background: #1976d2; 
-              color: white; 
-              padding: 6px 16px; 
-              border-radius: 4px; 
-              font-weight: bold; 
-              font-size: 14px; 
-            }
-            .round { 
-              font-size: 12px; 
-              color: #666; 
-            }
-            .director-info { 
-              display: flex; 
-              align-items: center; 
-              margin-bottom: 24px; 
-            }
-            .avatar { 
-              width: 60px; 
-              height: 60px; 
-              border-radius: 50%; 
-              background: #1976d2; 
-              color: white; 
-              display: flex; 
-              align-items: center; 
-              justify-content: center; 
-              font-weight: bold; 
-              font-size: 20px; 
-              margin-right: 16px; 
-              border: 3px solid #1976d2; 
-            }
-            .name { 
-              font-size: 20px; 
-              font-weight: bold; 
-              margin-bottom: 4px; 
-            }
-            .title { 
-              font-size: 16px; 
-              color: #666; 
-              margin-bottom: 2px; 
-            }
-            .era { 
-              font-size: 14px; 
-              color: #666; 
-            }
-            .quote-box { 
-              text-align: center; 
-              margin: 24px 0; 
-              padding: 24px; 
-              background: rgba(255,255,255,0.9); 
-              border-radius: 8px; 
-              position: relative; 
-              min-height: 80px; 
-              display: flex; 
-              align-items: center; 
-              justify-content: center; 
-            }
-            .quote-text { 
-              font-size: 18px; 
-              font-weight: bold; 
-              line-height: 1.4; 
-              color: #1976d2; 
-              font-style: italic; 
-              max-width: 320px; 
-              word-break: break-word; 
-              overflow-wrap: break-word; 
-            }
-            .meta { 
-              text-align: center; 
-              margin: 20px 0; 
-              color: #666; 
-            }
-            .meeting { 
-              font-size: 14px; 
-              margin-bottom: 4px; 
-            }
-            .date { 
-              font-size: 12px; 
-            }
-            .footer { 
-              border-top: 1px solid #e0e0e0; 
-              padding-top: 16px; 
-              margin-top: 20px; 
-              text-align: center; 
-            }
-            .brand { 
-              font-size: 16px; 
-              font-weight: bold; 
-              color: #1976d2; 
-              margin-bottom: 8px; 
-            }
-            .url { 
-              font-size: 12px; 
-              color: #666; 
-            }
-          </style>
-        </head>
-        <body>
-          <div class="decor"></div>
-          <div class="header">
-            <div class="category">${(cardData.analysis.category || '发言').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '')}</div>
-            <div class="round">第${cardData.round_number}轮发言</div>
-          </div>
-          <div class="director-info">
-            <div class="avatar">${cardData.director.name ? cardData.director.name[0] : 'A'}</div>
-            <div>
-              <div class="name">${(cardData.director.name || '匿名董事').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '')}</div>
-              <div class="title">${(cardData.director.title || '董事会成员').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '')}</div>
-              <div class="era">${(cardData.director.era || '现代').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '')}</div>
-            </div>
-          </div>
-          <div class="quote-box">
-            <div class="quote-text">${(cardData.analysis.highlight_quote || cardData.content || '精彩发言').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\u3000-\u303f\uff00-\uffef\s.,!?;:()"""''，。！？；：（）]/g, '')}</div>
-          </div>
-          <div class="meta">
-            <div class="meeting">来自会议：${(cardData.meeting.title || '未知会议').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\s]/g, '')}</div>
-            <div class="date">${format(new Date(cardData.created_at), 'yyyy年MM月dd日', { locale: zhCN })}</div>
-          </div>
-          <div class="footer">
-            <div class="brand">私人董事会</div>
-            <div class="url">dongshihui.xyz 与历史人物共商大事</div>
-          </div>
-        </body>
-        </html>
-      `);
-      iframeDoc.close();
+      // 背景渐变
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, 'rgba(25, 118, 210, 0.1)');
+      gradient.addColorStop(1, 'rgba(25, 118, 210, 0.05)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
       
-      // 等待iframe加载完成
-      await new Promise(resolve => {
-        if (iframe.contentWindow.document.readyState === 'complete') {
-          resolve();
+      // 边框
+      ctx.strokeStyle = '#1976d2';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, width - 2, height - 2);
+      
+      // 装饰圆形
+      ctx.fillStyle = 'rgba(25, 118, 210, 0.05)';
+      ctx.beginPath();
+      ctx.arc(width - 50, 50, 80, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      let yPos = 40;
+      
+      // 分类标签
+      ctx.fillStyle = '#1976d2';
+      ctx.fillRect(30, yPos, 100, 28);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 14px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      const cleanCategory = (cardData.analysis.category || '发言').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '');
+      ctx.fillText(cleanCategory, 80, yPos + 18);
+      
+      // 轮次信息
+      ctx.font = '12px Arial, sans-serif';
+      ctx.fillStyle = '#666666';
+      ctx.textAlign = 'right';
+      ctx.fillText(`第${cardData.round_number}轮发言`, width - 30, yPos + 18);
+      
+      yPos += 50;
+      
+      // 头像圆形
+      ctx.fillStyle = '#1976d2';
+      ctx.beginPath();
+      ctx.arc(70, yPos + 30, 30, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // 头像文字
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      const initial = cardData.director.name ? cardData.director.name[0] : 'A';
+      ctx.fillText(initial, 70, yPos + 38);
+      
+      // 董事信息
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 20px Arial, sans-serif';
+      const cleanName = (cardData.director.name || '匿名董事').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '');
+      ctx.fillText(cleanName, 110, yPos + 20);
+      
+      ctx.font = '16px Arial, sans-serif';
+      ctx.fillStyle = '#666666';
+      const cleanTitle = (cardData.director.title || '董事会成员').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '');
+      ctx.fillText(cleanTitle, 110, yPos + 42);
+      
+      ctx.font = '14px Arial, sans-serif';
+      const cleanEra = (cardData.director.era || '现代').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '');
+      ctx.fillText(cleanEra, 110, yPos + 60);
+      
+      yPos += 100;
+      
+      // 白色金句背景
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      const quoteHeight = 120;
+      ctx.fillRect(30, yPos, width - 60, quoteHeight);
+      
+      // 金句文本（严格清理）
+      const quoteText = (cardData.analysis.highlight_quote || cardData.content || '精彩发言')
+        .replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\u3000-\u303f\uff00-\uffef\s.,!?;:()"""''，。！？；：（）]/g, '')
+        .trim();
+      
+      ctx.fillStyle = '#1976d2';
+      ctx.font = 'bold 18px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      
+      // 手动文本换行
+      const maxLineWidth = width - 120;
+      const lines = [];
+      let currentLine = '';
+      
+      for (let char of quoteText) {
+        const testLine = currentLine + char;
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxLineWidth && currentLine) {
+          lines.push(currentLine);
+          currentLine = char;
         } else {
-          iframe.onload = resolve;
+          currentLine = testLine;
         }
+      }
+      if (currentLine) lines.push(currentLine);
+      
+      const lineHeight = 24;
+      const startY = yPos + (quoteHeight - lines.length * lineHeight) / 2 + 18;
+      
+      lines.forEach((line, index) => {
+        ctx.fillText(line, width / 2, startY + index * lineHeight);
       });
       
-      // 使用html2canvas转换iframe内容
-      const canvas = await html2canvas(iframe.contentDocument.body, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        foreignObjectRendering: false,
-        removeContainer: false,
-        imageTimeout: 0,
-        logging: false,
-        width: 480,
-        height: 600
-      });
+      yPos += quoteHeight + 30;
       
-      // 清理iframe
-      document.body.removeChild(iframe);
+      // 会议信息
+      ctx.font = '14px Arial, sans-serif';
+      ctx.fillStyle = '#666666';
+      const cleanMeeting = (cardData.meeting.title || '未知会议').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\s]/g, '');
+      ctx.fillText(`来自会议：${cleanMeeting}`, width / 2, yPos);
+      
+      const dateStr = format(new Date(cardData.created_at), 'yyyy年MM月dd日', { locale: zhCN });
+      ctx.fillText(dateStr, width / 2, yPos + 20);
+      
+      yPos += 50;
+      
+      // 分隔线
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(30, yPos);
+      ctx.lineTo(width - 30, yPos);
+      ctx.stroke();
+      
+      yPos += 20;
+      
+      // 品牌信息
+      ctx.font = 'bold 16px Arial, sans-serif';
+      ctx.fillStyle = '#1976d2';
+      ctx.fillText('私人董事会', width / 2, yPos);
+      
+      ctx.font = '12px Arial, sans-serif';
+      ctx.fillStyle = '#666666';
+      ctx.fillText('dongshihui.xyz 与历史人物共商大事', width / 2, yPos + 20);
       
       return canvas;
     } catch (error) {
