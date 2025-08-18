@@ -75,54 +75,25 @@ const QuestionBox = ({ meetingId, onQuestionSubmitted, participants = [] }) => {
           onQuestionSubmitted(result.data);
         }
         
-        // 自动生成董事发言回应问题
+        // 自动生成董事回复问题
         const autoGenerateResponses = async () => {
           try {
-            if (questionScope === 'all') {
-              // 全员提问：依次生成所有董事的发言
-              for (let i = 0; i < participants.length; i++) {
-                const generateRes = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings/${meetingId}/next-statement`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  }
-                });
-                
-                const generateResult = await generateRes.json();
-                if (generateResult.success) {
-                  console.log(`第${i + 1}位董事发言生成成功`);
-                  // 每次生成后短暂延迟
-                  if (i < participants.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                  }
-                } else {
-                  console.error(`第${i + 1}位董事发言生成失败:`, generateResult.error);
-                  break;
-                }
+            // 使用专门的问题回复API，这会让所有董事回复问题并正确更新问题状态
+            const respondRes = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings/${meetingId}/questions/${result.data.id}/respond`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
               }
-            } else {
-              // 定向提问：生成一次发言
-              const generateRes = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings/${meetingId}/next-statement`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                }
-              });
-              
-              const generateResult = await generateRes.json();
-              if (generateResult.success) {
-                console.log('定向董事发言生成成功');
-              }
-            }
+            });
             
-            // 触发会议数据刷新
-            setTimeout(() => {
-              if (onQuestionSubmitted) {
-                onQuestionSubmitted(result.data);
-              }
-            }, 1000);
+            const respondResult = await respondRes.json();
+            if (respondResult.success) {
+              console.log('董事回复生成成功，共生成', respondResult.data.responses.length, '位董事的回复');
+            } else {
+              console.error('董事回复生成失败:', respondResult.error);
+            }
           } catch (generateError) {
-            console.error('自动生成董事发言失败:', generateError);
+            console.error('自动生成董事回复失败:', generateError);
           }
         };
         

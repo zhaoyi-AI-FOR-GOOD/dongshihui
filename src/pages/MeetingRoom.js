@@ -204,6 +204,7 @@ const MeetingRoom = () => {
       const intervalRefresh = setInterval(() => {
         refreshCount++;
         refetch();
+        fetchQuestions(); // 同时刷新问题列表状态
         
         if (refreshCount >= maxRefreshes) {
           clearInterval(intervalRefresh);
@@ -214,6 +215,7 @@ const MeetingRoom = () => {
       toast.success('提问已提交，指定董事正在回应...');
       setTimeout(() => {
         refetch();
+        fetchQuestions(); // 同时刷新问题列表状态
       }, 3500);
     }
   };
