@@ -129,148 +129,109 @@ const QuoteCard = ({ statementId, onClose }) => {
     
     setIsGeneratingImage(true);
     try {
-      // 使用Canvas直接绘制，避免html2canvas的字体渲染问题
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      // 创建纯净的HTML结构用于html2canvas转换
+      const imageContainer = document.createElement('div');
+      imageContainer.style.cssText = `
+        width: 480px;
+        min-height: 600px;
+        padding: 30px;
+        background: linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(25, 118, 210, 0.05) 100%);
+        border: 2px solid #1976d2;
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        color: #333;
+        box-sizing: border-box;
+      `;
       
-      // 设置高清画布
-      const scale = 2;
-      const width = 480;
-      const height = 600;
-      canvas.width = width * scale;
-      canvas.height = height * scale;
-      canvas.style.width = width + 'px';
-      canvas.style.height = height + 'px';
-      ctx.scale(scale, scale);
+      // 创建内容HTML
+      imageContainer.innerHTML = `
+        <div style="position: absolute; top: -30px; right: -30px; width: 160px; height: 160px; background: radial-gradient(circle, rgba(25, 118, 210, 0.05) 0%, transparent 70%); border-radius: 50%;"></div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <div style="background: #1976d2; color: white; padding: 6px 16px; border-radius: 4px; font-weight: bold; font-size: 14px;">
+            ${cardData.analysis.category || '发言'}
+          </div>
+          <div style="font-size: 12px; color: #666;">
+            第${cardData.round_number}轮发言
+          </div>
+        </div>
+        
+        <div style="display: flex; align-items: center; margin-bottom: 24px;">
+          <div style="width: 60px; height: 60px; border-radius: 50%; background: #1976d2; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; margin-right: 16px; border: 3px solid #1976d2;">
+            ${cardData.director.name ? cardData.director.name[0] : 'A'}
+          </div>
+          <div>
+            <div style="font-size: 20px; font-weight: bold; margin-bottom: 4px;">
+              ${cardData.director.name || '匿名董事'}
+            </div>
+            <div style="font-size: 16px; color: #666; margin-bottom: 2px;">
+              ${cardData.director.title || '董事会成员'}
+            </div>
+            <div style="font-size: 14px; color: #666;">
+              ${cardData.director.era || '现代'}
+            </div>
+          </div>
+        </div>
+        
+        <div style="text-align: center; margin: 24px 0; padding: 24px; background: rgba(255,255,255,0.9); border-radius: 8px; position: relative; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; top: 8px; left: 16px; width: 12px; height: 12px; border-left: 3px solid rgba(25, 118, 210, 0.2); border-top: 3px solid rgba(25, 118, 210, 0.2);"></div>
+          <div style="position: absolute; bottom: 8px; right: 16px; width: 12px; height: 12px; border-right: 3px solid rgba(25, 118, 210, 0.2); border-bottom: 3px solid rgba(25, 118, 210, 0.2);"></div>
+          <div style="font-size: 18px; font-weight: bold; line-height: 1.4; color: #1976d2; font-style: italic; max-width: 320px; word-break: break-word; overflow-wrap: break-word;">
+            ${(cardData.analysis.highlight_quote || cardData.content || '精彩发言').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\u3000-\u303f\uff00-\uffef\s.,!?;:()"""''，。！？；：（）]/g, '')}
+          </div>
+        </div>
+        
+        ${cardData.analysis.keywords && cardData.analysis.keywords.length > 0 ? `
+        <div style="text-align: center; margin: 16px 0;">
+          ${cardData.analysis.keywords.slice(0, 5).map(keyword => 
+            `<span style="display: inline-block; border: 1px solid #1976d2; color: #1976d2; padding: 4px 8px; margin: 2px; border-radius: 12px; font-size: 12px; background: white;">${keyword.replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '')}</span>`
+          ).join('')}
+        </div>
+        ` : ''}
+        
+        <div style="text-align: center; margin: 20px 0; color: #666;">
+          <div style="font-size: 14px; margin-bottom: 4px;">
+            来自会议：${(cardData.meeting.title || '未知会议').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\s]/g, '')}
+          </div>
+          <div style="font-size: 12px;">
+            ${format(new Date(cardData.created_at), 'yyyy年MM月dd日', { locale: zhCN })}
+          </div>
+        </div>
+        
+        <div style="border-top: 1px solid #e0e0e0; padding-top: 16px; margin-top: 20px; text-align: center;">
+          <div style="font-size: 16px; font-weight: bold; color: #1976d2; margin-bottom: 8px;">
+            私人董事会
+          </div>
+          <div style="font-size: 12px; color: #666;">
+            dongshihui.xyz 与历史人物共商大事
+          </div>
+        </div>
+      `;
       
-      // 设置字体
-      ctx.font = '16px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
+      // 临时添加到DOM中
+      imageContainer.style.position = 'fixed';
+      imageContainer.style.top = '-9999px';
+      imageContainer.style.left = '-9999px';
+      document.body.appendChild(imageContainer);
       
-      // 绘制背景 - 使用rgba格式确保兼容性
-      const gradient = ctx.createLinearGradient(0, 0, width, height);
-      const safeColor = cardData.analysis.theme_color || '#1976d2';
-      gradient.addColorStop(0, 'rgba(25, 118, 210, 0.1)');
-      gradient.addColorStop(1, 'rgba(25, 118, 210, 0.05)');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-      
-      // 绘制边框
-      ctx.strokeStyle = safeColor;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(2, 2, width - 4, height - 4);
-      
-      // 绘制装饰圆形 - 使用rgba格式确保兼容性
-      ctx.fillStyle = 'rgba(25, 118, 210, 0.05)';
-      ctx.beginPath();
-      ctx.arc(width - 50, 50, 80, 0, 2 * Math.PI);
-      ctx.fill();
-      
-      let yPos = 40;
-      
-      // 绘制分类标签
-      ctx.fillStyle = safeColor;
-      ctx.fillRect(30, yPos, 120, 30);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 14px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(cardData.analysis.category, 90, yPos + 8);
-      
-      // 绘制轮次信息
-      ctx.font = '12px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillStyle = '#666666';
-      ctx.textAlign = 'right';
-      ctx.fillText(`第${cardData.round_number}轮发言`, width - 30, yPos + 8);
-      
-      yPos += 60;
-      
-      // 绘制董事信息
-      ctx.font = 'bold 20px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillStyle = '#000000';
-      ctx.textAlign = 'left';
-      ctx.fillText(cardData.director.name, 100, yPos);
-      
-      ctx.font = '16px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillStyle = '#666666';
-      ctx.fillText(cardData.director.title, 100, yPos + 25);
-      
-      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillText(cardData.director.era, 100, yPos + 45);
-      
-      yPos += 90;
-      
-      // 绘制白色背景的金句区域
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      const quoteBoxHeight = 120;
-      ctx.fillRect(30, yPos, width - 60, quoteBoxHeight);
-      
-      // 绘制引号装饰 - 使用rgba格式
-      ctx.fillStyle = 'rgba(25, 118, 210, 0.2)';
-      // 左上角装饰
-      ctx.fillRect(45, yPos + 15, 15, 3);
-      ctx.fillRect(45, yPos + 15, 3, 15);
-      // 右下角装饰
-      ctx.fillRect(width - 60, yPos + quoteBoxHeight - 20, 15, 3);
-      ctx.fillRect(width - 48, yPos + quoteBoxHeight - 32, 3, 15);
-      
-      // 绘制金句文本（多行处理）
-      ctx.fillStyle = safeColor;
-      ctx.font = 'bold 18px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.textAlign = 'center';
-      
-      const quoteText = cardData.analysis.highlight_quote || cardData.content;
-      const maxWidth = width - 120;
-      const lines = wrapText(ctx, quoteText, maxWidth);
-      const lineHeight = 24;
-      const startY = yPos + (quoteBoxHeight - lines.length * lineHeight) / 2;
-      
-      lines.forEach((line, index) => {
-        ctx.fillText(line, width / 2, startY + index * lineHeight);
+      // 使用html2canvas转换
+      const canvas = await html2canvas(imageContainer, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        foreignObjectRendering: false,
+        removeContainer: true,
+        imageTimeout: 0,
+        logging: false,
+        width: 480,
+        height: Math.max(600, imageContainer.offsetHeight)
       });
       
-      yPos += quoteBoxHeight + 30;
-      
-      // 绘制关键词
-      if (cardData.analysis.keywords.length > 0) {
-        ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
-        ctx.textAlign = 'center';
-        const keywordText = cardData.analysis.keywords.join(' · ');
-        ctx.fillStyle = safeColor;
-        ctx.fillText(keywordText, width / 2, yPos);
-        yPos += 30;
-      }
-      
-      // 绘制会议信息
-      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillStyle = '#666666';
-      ctx.textAlign = 'center';
-      ctx.fillText(`来自会议：${cardData.meeting.title}`, width / 2, yPos);
-      
-      const dateStr = format(new Date(cardData.created_at), 'yyyy年MM月dd日', { locale: zhCN });
-      ctx.fillText(dateStr, width / 2, yPos + 20);
-      
-      yPos += 60;
-      
-      // 绘制分隔线
-      ctx.strokeStyle = '#e0e0e0';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(30, yPos);
-      ctx.lineTo(width - 30, yPos);
-      ctx.stroke();
-      
-      yPos += 20;
-      
-      // 绘制品牌信息
-      ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillStyle = '#1976d2';
-      ctx.textAlign = 'center';
-      ctx.fillText('私人董事会', width / 2, yPos);
-      
-      ctx.font = '12px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillStyle = '#666666';
-      ctx.fillText('dongshihui.xyz 与历史人物共商大事', width / 2, yPos + 20);
+      // 清理DOM
+      document.body.removeChild(imageContainer);
       
       return canvas;
     } catch (error) {
@@ -280,33 +241,6 @@ const QuoteCard = ({ statementId, onClose }) => {
     } finally {
       setIsGeneratingImage(false);
     }
-  };
-
-  // 文本换行处理函数 - 改进中文处理
-  const wrapText = (context, text, maxWidth) => {
-    // 清理文本，移除可能的控制字符
-    const cleanText = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-    const chars = Array.from(cleanText); // 使用Array.from正确处理Unicode字符
-    const lines = [];
-    let currentLine = '';
-
-    for (let i = 0; i < chars.length; i++) {
-      const char = chars[i];
-      const testLine = currentLine + char;
-      const metrics = context.measureText(testLine);
-      const testWidth = metrics.width;
-      
-      if (testWidth > maxWidth && currentLine !== '') {
-        lines.push(currentLine);
-        currentLine = char;
-      } else {
-        currentLine = testLine;
-      }
-    }
-    if (currentLine) {
-      lines.push(currentLine);
-    }
-    return lines;
   };
 
   const handleDownloadImage = async () => {
