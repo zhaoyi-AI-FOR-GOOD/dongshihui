@@ -129,15 +129,30 @@ const QuoteCard = ({ statementId, onClose }) => {
     
     setIsGeneratingImage(true);
     try {
-      // 使用html2canvas生成高质量图片
+      // 使用html2canvas生成高质量图片，优化字体渲染
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: '#ffffff',
         scale: 2, // 高清图片
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false, // 防止跨域污染
+        foreignObjectRendering: true, // 使用外部对象渲染改善字体
+        imageTimeout: 15000, // 增加图片加载超时时间
+        removeContainer: true, // 渲染后移除容器
+        scrollX: 0,
+        scrollY: 0,
         width: cardRef.current.offsetWidth,
         height: cardRef.current.offsetHeight,
-        logging: false
+        logging: false,
+        onclone: function(clonedDoc) {
+          // 在克隆文档中强制设置字体
+          const style = clonedDoc.createElement('style');
+          style.textContent = `
+            * {
+              font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+        }
       });
       
       return canvas;
@@ -423,10 +438,10 @@ const QuoteCard = ({ statementId, onClose }) => {
               mt: 2
             }}>
               <Typography variant="body2" color="text.secondary" fontWeight="bold" sx={{ mb: 1 }}>
-                私人董事会系统
+                私人董事会
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                dongshihui.xyz · AI驱动的历史名人智慧对话平台
+                dongshihui.xyz 与历史人物共商大事
               </Typography>
             </Box>
           </Paper>
