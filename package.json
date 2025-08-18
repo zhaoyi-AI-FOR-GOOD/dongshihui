@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "私人董事会系统前端界面",
   "private": true,
-  "homepage": "/meeting/",
+  "homepage": "https://dongshihui.xyz/meeting",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
