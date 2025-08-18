@@ -19,7 +19,6 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
 
 const QuoteCard = ({ statementId, onClose }) => {
@@ -127,6 +126,27 @@ const QuoteCard = ({ statementId, onClose }) => {
   const handleGenerateImage = async () => {
     if (!cardData) return;
     
+    // 调试：检查数据源是否包含异常字符
+    console.log('=== 调试数据源 ===');
+    console.log('highlight_quote:', cardData.analysis.highlight_quote);
+    console.log('content:', cardData.content);
+    console.log('director.name:', cardData.director.name);
+    console.log('meeting.title:', cardData.meeting.title);
+    
+    // 检查是否包含CSS字符
+    const checkCSS = (text) => {
+      if (typeof text === 'string' && text.includes('&::after')) {
+        console.error('发现CSS字符:', text);
+        return true;
+      }
+      return false;
+    };
+    
+    checkCSS(cardData.analysis.highlight_quote);
+    checkCSS(cardData.content);
+    checkCSS(cardData.director.name);
+    checkCSS(cardData.meeting.title);
+    
     setIsGeneratingImage(true);
     try {
       // 完全抛弃html2canvas，使用纯Canvas API手绘
@@ -167,13 +187,14 @@ const QuoteCard = ({ statementId, onClose }) => {
       ctx.fillStyle = '#1976d2';
       ctx.fillRect(30, yPos, 100, 28);
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 14px Arial, sans-serif';
+      // 使用系统默认字体，避免字体回退时的CSS解析
+      ctx.font = 'bold 14px sans-serif';
       ctx.textAlign = 'center';
       const cleanCategory = (cardData.analysis.category || '发言').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '');
       ctx.fillText(cleanCategory, 80, yPos + 18);
       
       // 轮次信息
-      ctx.font = '12px Arial, sans-serif';
+      ctx.font = '12px sans-serif';
       ctx.fillStyle = '#666666';
       ctx.textAlign = 'right';
       ctx.fillText(`第${cardData.round_number}轮发言`, width - 30, yPos + 18);
@@ -188,7 +209,7 @@ const QuoteCard = ({ statementId, onClose }) => {
       
       // 头像文字
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 20px Arial, sans-serif';
+      ctx.font = 'bold 20px sans-serif';
       ctx.textAlign = 'center';
       const initial = cardData.director.name ? cardData.director.name[0] : 'A';
       ctx.fillText(initial, 70, yPos + 38);
@@ -196,16 +217,16 @@ const QuoteCard = ({ statementId, onClose }) => {
       // 董事信息
       ctx.textAlign = 'left';
       ctx.fillStyle = '#000000';
-      ctx.font = 'bold 20px Arial, sans-serif';
+      ctx.font = 'bold 20px sans-serif';
       const cleanName = (cardData.director.name || '匿名董事').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '');
       ctx.fillText(cleanName, 110, yPos + 20);
       
-      ctx.font = '16px Arial, sans-serif';
+      ctx.font = '16px sans-serif';
       ctx.fillStyle = '#666666';
       const cleanTitle = (cardData.director.title || '董事会成员').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '');
       ctx.fillText(cleanTitle, 110, yPos + 42);
       
-      ctx.font = '14px Arial, sans-serif';
+      ctx.font = '14px sans-serif';
       const cleanEra = (cardData.director.era || '现代').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '');
       ctx.fillText(cleanEra, 110, yPos + 60);
       
@@ -222,25 +243,22 @@ const QuoteCard = ({ statementId, onClose }) => {
         .trim();
       
       ctx.fillStyle = '#1976d2';
-      ctx.font = 'bold 18px Arial, sans-serif';
+      ctx.font = 'bold 18px sans-serif';
       ctx.textAlign = 'center';
       
-      // 手动文本换行
-      const maxLineWidth = width - 120;
+      // 使用固定字符宽度，避免measureText可能的CSS引用
+      const avgCharWidth = 18; // 18px字体的平均字符宽度
+      const maxCharsPerLine = Math.floor((width - 120) / avgCharWidth);
       const lines = [];
-      let currentLine = '';
       
-      for (let char of quoteText) {
-        const testLine = currentLine + char;
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxLineWidth && currentLine) {
-          lines.push(currentLine);
-          currentLine = char;
-        } else {
-          currentLine = testLine;
-        }
+      console.log('文本换行 - 原文:', quoteText);
+      console.log('每行最大字符数:', maxCharsPerLine);
+      
+      for (let i = 0; i < quoteText.length; i += maxCharsPerLine) {
+        const line = quoteText.slice(i, i + maxCharsPerLine);
+        lines.push(line);
+        console.log('行', lines.length, ':', line);
       }
-      if (currentLine) lines.push(currentLine);
       
       const lineHeight = 24;
       const startY = yPos + (quoteHeight - lines.length * lineHeight) / 2 + 18;
@@ -252,7 +270,7 @@ const QuoteCard = ({ statementId, onClose }) => {
       yPos += quoteHeight + 30;
       
       // 会议信息
-      ctx.font = '14px Arial, sans-serif';
+      ctx.font = '14px sans-serif';
       ctx.fillStyle = '#666666';
       const cleanMeeting = (cardData.meeting.title || '未知会议').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\s]/g, '');
       ctx.fillText(`来自会议：${cleanMeeting}`, width / 2, yPos);
@@ -273,11 +291,11 @@ const QuoteCard = ({ statementId, onClose }) => {
       yPos += 20;
       
       // 品牌信息
-      ctx.font = 'bold 16px Arial, sans-serif';
+      ctx.font = 'bold 16px sans-serif';
       ctx.fillStyle = '#1976d2';
       ctx.fillText('私人董事会', width / 2, yPos);
       
-      ctx.font = '12px Arial, sans-serif';
+      ctx.font = '12px sans-serif';
       ctx.fillStyle = '#666666';
       ctx.fillText('dongshihui.xyz 与历史人物共商大事', width / 2, yPos + 20);
       
