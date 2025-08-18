@@ -207,13 +207,23 @@ const QuoteCard = ({ statementId, onClose }) => {
       const quoteBoxHeight = 120;
       ctx.fillRect(30, yPos, width - 60, quoteBoxHeight);
       
-      // 绘制引号装饰
-      ctx.fillStyle = cardData.analysis.theme_color + '30';
-      ctx.font = 'bold 60px serif';
-      ctx.textAlign = 'left';
-      ctx.fillText('"', 40, yPos + 10);
-      ctx.textAlign = 'right';
-      ctx.fillText('"', width - 40, yPos + quoteBoxHeight - 20);
+      // 绘制引号装饰 - 使用简单线条替代特殊字符
+      ctx.strokeStyle = cardData.analysis.theme_color + '30';
+      ctx.lineWidth = 3;
+      // 左引号
+      ctx.beginPath();
+      ctx.arc(50, yPos + 20, 8, Math.PI * 0.7, Math.PI * 1.3);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(55, yPos + 15, 8, Math.PI * 0.7, Math.PI * 1.3);
+      ctx.stroke();
+      // 右引号
+      ctx.beginPath();
+      ctx.arc(width - 50, yPos + quoteBoxHeight - 30, 8, Math.PI * -0.3, Math.PI * 0.3);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(width - 55, yPos + quoteBoxHeight - 25, 8, Math.PI * -0.3, Math.PI * 0.3);
+      ctx.stroke();
       
       // 绘制金句文本（多行处理）
       ctx.fillStyle = cardData.analysis.theme_color;
@@ -283,25 +293,30 @@ const QuoteCard = ({ statementId, onClose }) => {
     }
   };
 
-  // 文本换行处理函数
+  // 文本换行处理函数 - 改进中文处理
   const wrapText = (context, text, maxWidth) => {
-    const words = text.split('');
+    // 清理文本，移除可能的控制字符
+    const cleanText = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+    const chars = Array.from(cleanText); // 使用Array.from正确处理Unicode字符
     const lines = [];
     let currentLine = '';
 
-    for (let i = 0; i < words.length; i++) {
-      const testLine = currentLine + words[i];
+    for (let i = 0; i < chars.length; i++) {
+      const char = chars[i];
+      const testLine = currentLine + char;
       const metrics = context.measureText(testLine);
       const testWidth = metrics.width;
       
       if (testWidth > maxWidth && currentLine !== '') {
         lines.push(currentLine);
-        currentLine = words[i];
+        currentLine = char;
       } else {
         currentLine = testLine;
       }
     }
-    lines.push(currentLine);
+    if (currentLine) {
+      lines.push(currentLine);
+    }
     return lines;
   };
 

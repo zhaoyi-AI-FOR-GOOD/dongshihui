@@ -164,7 +164,7 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
       ctx.fillStyle = '#1976d2';
       ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText('📋 执行摘要', 45, yPos + 20);
+      ctx.fillText('■ 执行摘要', 45, yPos + 20);
       
       // 绘制执行摘要文本（多行处理）
       ctx.fillStyle = '#333333';
@@ -181,7 +181,7 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
       // 关键要点
       ctx.fillStyle = '#1976d2';
       ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillText('💡 关键要点', 30, yPos);
+      ctx.fillText('• 关键要点', 30, yPos);
       
       yPos += 25;
       ctx.fillStyle = '#333333';
@@ -200,14 +200,14 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
       // 董事亮点
       ctx.fillStyle = '#1976d2';
       ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillText('⭐ 董事亮点', 30, yPos);
+      ctx.fillText('◆ 董事亮点', 30, yPos);
       
       yPos += 25;
       ctx.fillStyle = '#333333';
       ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
       summary.participant_highlights.slice(0, 4).forEach((highlight) => {
         ctx.fillStyle = '#1976d2';
-        ctx.fillText(`• ${highlight.director}：`, 45, yPos);
+        ctx.fillText(`> ${highlight.director}:`, 45, yPos);
         ctx.fillStyle = '#333333';
         const contributionLines = wrapText(ctx, highlight.key_contribution, width - 140);
         contributionLines.forEach((line, lineIndex) => {
@@ -252,25 +252,30 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
     }
   };
 
-  // 文本换行处理函数
+  // 文本换行处理函数 - 改进中文处理
   const wrapText = (context, text, maxWidth) => {
-    const words = text.split('');
+    // 清理文本，移除可能的控制字符
+    const cleanText = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+    const chars = Array.from(cleanText); // 使用Array.from正确处理Unicode字符
     const lines = [];
     let currentLine = '';
 
-    for (let i = 0; i < words.length; i++) {
-      const testLine = currentLine + words[i];
+    for (let i = 0; i < chars.length; i++) {
+      const char = chars[i];
+      const testLine = currentLine + char;
       const metrics = context.measureText(testLine);
       const testWidth = metrics.width;
       
       if (testWidth > maxWidth && currentLine !== '') {
         lines.push(currentLine);
-        currentLine = words[i];
+        currentLine = char;
       } else {
         currentLine = testLine;
       }
     }
-    lines.push(currentLine);
+    if (currentLine) {
+      lines.push(currentLine);
+    }
     return lines;
   };
 
