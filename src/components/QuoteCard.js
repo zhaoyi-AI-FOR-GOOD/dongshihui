@@ -129,31 +129,149 @@ const QuoteCard = ({ statementId, onClose }) => {
     
     setIsGeneratingImage(true);
     try {
-      // 使用html2canvas生成高质量图片，优化字体渲染
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2, // 高清图片
-        useCORS: true,
-        allowTaint: false, // 防止跨域污染
-        foreignObjectRendering: true, // 使用外部对象渲染改善字体
-        imageTimeout: 15000, // 增加图片加载超时时间
-        removeContainer: true, // 渲染后移除容器
-        scrollX: 0,
-        scrollY: 0,
-        width: cardRef.current.offsetWidth,
-        height: cardRef.current.offsetHeight,
-        logging: false,
-        onclone: function(clonedDoc) {
-          // 在克隆文档中强制设置字体
-          const style = clonedDoc.createElement('style');
-          style.textContent = `
-            * {
-              font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif !important;
-            }
-          `;
-          clonedDoc.head.appendChild(style);
-        }
+      // 使用Canvas直接绘制，避免html2canvas的字体渲染问题
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // 设置高清画布
+      const scale = 2;
+      const width = 480;
+      const height = 600;
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.scale(scale, scale);
+      
+      // 设置字体
+      ctx.font = '16px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      
+      // 绘制背景
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, cardData.analysis.theme_color + '22');
+      gradient.addColorStop(1, cardData.analysis.theme_color + '11');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+      
+      // 绘制边框
+      ctx.strokeStyle = cardData.analysis.theme_color;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(2, 2, width - 4, height - 4);
+      
+      // 绘制装饰圆形
+      const decorGradient = ctx.createRadialGradient(width - 50, 50, 0, width - 50, 50, 100);
+      decorGradient.addColorStop(0, cardData.analysis.theme_color + '15');
+      decorGradient.addColorStop(1, 'transparent');
+      ctx.fillStyle = decorGradient;
+      ctx.beginPath();
+      ctx.arc(width - 50, 50, 100, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      let yPos = 40;
+      
+      // 绘制分类标签
+      ctx.fillStyle = cardData.analysis.theme_color;
+      ctx.fillRect(30, yPos, 120, 30);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 14px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(cardData.analysis.category, 90, yPos + 8);
+      
+      // 绘制轮次信息
+      ctx.font = '12px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillStyle = '#666666';
+      ctx.textAlign = 'right';
+      ctx.fillText(`第${cardData.round_number}轮发言`, width - 30, yPos + 8);
+      
+      yPos += 60;
+      
+      // 绘制董事信息
+      ctx.font = 'bold 20px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillStyle = '#000000';
+      ctx.textAlign = 'left';
+      ctx.fillText(cardData.director.name, 100, yPos);
+      
+      ctx.font = '16px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillStyle = '#666666';
+      ctx.fillText(cardData.director.title, 100, yPos + 25);
+      
+      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillText(cardData.director.era, 100, yPos + 45);
+      
+      yPos += 90;
+      
+      // 绘制白色背景的金句区域
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      const quoteBoxHeight = 120;
+      ctx.fillRect(30, yPos, width - 60, quoteBoxHeight);
+      
+      // 绘制引号装饰
+      ctx.fillStyle = cardData.analysis.theme_color + '30';
+      ctx.font = 'bold 60px serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('"', 40, yPos + 10);
+      ctx.textAlign = 'right';
+      ctx.fillText('"', width - 40, yPos + quoteBoxHeight - 20);
+      
+      // 绘制金句文本（多行处理）
+      ctx.fillStyle = cardData.analysis.theme_color;
+      ctx.font = 'bold 18px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.textAlign = 'center';
+      
+      const quoteText = cardData.analysis.highlight_quote || cardData.content;
+      const maxWidth = width - 120;
+      const lines = wrapText(ctx, quoteText, maxWidth);
+      const lineHeight = 24;
+      const startY = yPos + (quoteBoxHeight - lines.length * lineHeight) / 2;
+      
+      lines.forEach((line, index) => {
+        ctx.fillText(line, width / 2, startY + index * lineHeight);
       });
+      
+      yPos += quoteBoxHeight + 30;
+      
+      // 绘制关键词
+      if (cardData.analysis.keywords.length > 0) {
+        ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
+        ctx.textAlign = 'center';
+        const keywordText = cardData.analysis.keywords.join(' · ');
+        ctx.fillStyle = cardData.analysis.theme_color;
+        ctx.fillText(keywordText, width / 2, yPos);
+        yPos += 30;
+      }
+      
+      // 绘制会议信息
+      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillStyle = '#666666';
+      ctx.textAlign = 'center';
+      ctx.fillText(`来自会议：${cardData.meeting.title}`, width / 2, yPos);
+      
+      const dateStr = format(new Date(cardData.created_at), 'yyyy年MM月dd日', { locale: zhCN });
+      ctx.fillText(dateStr, width / 2, yPos + 20);
+      
+      yPos += 60;
+      
+      // 绘制分隔线
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(30, yPos);
+      ctx.lineTo(width - 30, yPos);
+      ctx.stroke();
+      
+      yPos += 20;
+      
+      // 绘制品牌信息
+      ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillStyle = '#1976d2';
+      ctx.textAlign = 'center';
+      ctx.fillText('私人董事会', width / 2, yPos);
+      
+      ctx.font = '12px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillStyle = '#666666';
+      ctx.fillText('dongshihui.xyz 与历史人物共商大事', width / 2, yPos + 20);
       
       return canvas;
     } catch (error) {
@@ -163,6 +281,28 @@ const QuoteCard = ({ statementId, onClose }) => {
     } finally {
       setIsGeneratingImage(false);
     }
+  };
+
+  // 文本换行处理函数
+  const wrapText = (context, text, maxWidth) => {
+    const words = text.split('');
+    const lines = [];
+    let currentLine = '';
+
+    for (let i = 0; i < words.length; i++) {
+      const testLine = currentLine + words[i];
+      const metrics = context.measureText(testLine);
+      const testWidth = metrics.width;
+      
+      if (testWidth > maxWidth && currentLine !== '') {
+        lines.push(currentLine);
+        currentLine = words[i];
+      } else {
+        currentLine = testLine;
+      }
+    }
+    lines.push(currentLine);
+    return lines;
   };
 
   const handleDownloadImage = async () => {

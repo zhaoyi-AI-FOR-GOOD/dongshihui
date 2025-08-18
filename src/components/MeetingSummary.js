@@ -110,31 +110,137 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
     
     setIsGeneratingImage(true);
     try {
-      // 使用html2canvas生成高质量图片，优化字体渲染
-      const canvas = await html2canvas(summaryRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2, // 高清图片
-        useCORS: true,
-        allowTaint: false, // 防止跨域污染
-        foreignObjectRendering: true, // 使用外部对象渲染改善字体
-        imageTimeout: 15000, // 增加图片加载超时时间
-        removeContainer: true, // 渲染后移除容器
-        scrollX: 0,
-        scrollY: 0,
-        width: summaryRef.current.offsetWidth,
-        height: summaryRef.current.offsetHeight,
-        logging: false,
-        onclone: function(clonedDoc) {
-          // 在克隆文档中强制设置字体
-          const style = clonedDoc.createElement('style');
-          style.textContent = `
-            * {
-              font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif !important;
-            }
-          `;
-          clonedDoc.head.appendChild(style);
+      // 使用Canvas直接绘制摘要，避免字体渲染问题
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // 设置高清画布
+      const scale = 2;
+      const width = 600;
+      const height = Math.max(800, 200 + summary.key_points.length * 30 + summary.participant_highlights.length * 40 + 300);
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.scale(scale, scale);
+      
+      // 设置背景
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      
+      let yPos = 30;
+      
+      // 绘制标题区域
+      ctx.fillStyle = '#1976d2';
+      ctx.fillRect(0, yPos, width, 60);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('会议AI摘要', width / 2, yPos + 20);
+      
+      ctx.font = '16px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillText(meetingTitle, width / 2, yPos + 45);
+      
+      yPos += 80;
+      
+      // 生成时间
+      ctx.font = '12px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillStyle = '#999999';
+      ctx.textAlign = 'center';
+      const timeStr = format(new Date(), 'yyyy年MM月dd日 HH:mm', { locale: zhCN });
+      ctx.fillText(`生成时间：${timeStr}`, width / 2, yPos);
+      
+      yPos += 40;
+      
+      // 执行摘要区域
+      ctx.fillStyle = '#f8f9fa';
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 1;
+      const summaryBoxHeight = 80;
+      ctx.fillRect(30, yPos, width - 60, summaryBoxHeight);
+      ctx.strokeRect(30, yPos, width - 60, summaryBoxHeight);
+      
+      ctx.fillStyle = '#1976d2';
+      ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('📋 执行摘要', 45, yPos + 20);
+      
+      // 绘制执行摘要文本（多行处理）
+      ctx.fillStyle = '#333333';
+      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
+      const summaryLines = wrapText(ctx, summary.executive_summary, width - 100);
+      summaryLines.forEach((line, index) => {
+        if (index < 2) { // 最多显示2行
+          ctx.fillText(line, 45, yPos + 40 + index * 18);
         }
       });
+      
+      yPos += summaryBoxHeight + 30;
+      
+      // 关键要点
+      ctx.fillStyle = '#1976d2';
+      ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillText('💡 关键要点', 30, yPos);
+      
+      yPos += 25;
+      ctx.fillStyle = '#333333';
+      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
+      summary.key_points.slice(0, 5).forEach((point, index) => {
+        const pointText = `${index + 1}. ${point}`;
+        const pointLines = wrapText(ctx, pointText, width - 80);
+        pointLines.forEach((line, lineIndex) => {
+          ctx.fillText(line, lineIndex === 0 ? 45 : 60, yPos + lineIndex * 18);
+        });
+        yPos += Math.max(18, pointLines.length * 18);
+      });
+      
+      yPos += 20;
+      
+      // 董事亮点
+      ctx.fillStyle = '#1976d2';
+      ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillText('⭐ 董事亮点', 30, yPos);
+      
+      yPos += 25;
+      ctx.fillStyle = '#333333';
+      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
+      summary.participant_highlights.slice(0, 4).forEach((highlight) => {
+        ctx.fillStyle = '#1976d2';
+        ctx.fillText(`• ${highlight.director}：`, 45, yPos);
+        ctx.fillStyle = '#333333';
+        const contributionLines = wrapText(ctx, highlight.key_contribution, width - 140);
+        contributionLines.forEach((line, lineIndex) => {
+          ctx.fillText(line, 120, yPos + lineIndex * 18);
+        });
+        yPos += Math.max(20, contributionLines.length * 18);
+      });
+      
+      yPos += 30;
+      
+      // 分隔线
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(30, yPos);
+      ctx.lineTo(width - 30, yPos);
+      ctx.stroke();
+      
+      yPos += 30;
+      
+      // 品牌信息
+      ctx.fillStyle = '#1976d2';
+      ctx.font = 'bold 18px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('私人董事会', width / 2, yPos);
+      
+      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillStyle = '#666666';
+      ctx.fillText('dongshihui.xyz 与历史人物共商大事', width / 2, yPos + 25);
+      
+      ctx.font = '12px PingFang SC, Microsoft YaHei, sans-serif';
+      ctx.fillStyle = '#999999';
+      ctx.fillText('本摘要由Claude Sonnet 4 AI自动生成', width / 2, yPos + 45);
       
       return canvas;
     } catch (error) {
@@ -144,6 +250,28 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
     } finally {
       setIsGeneratingImage(false);
     }
+  };
+
+  // 文本换行处理函数
+  const wrapText = (context, text, maxWidth) => {
+    const words = text.split('');
+    const lines = [];
+    let currentLine = '';
+
+    for (let i = 0; i < words.length; i++) {
+      const testLine = currentLine + words[i];
+      const metrics = context.measureText(testLine);
+      const testWidth = metrics.width;
+      
+      if (testWidth > maxWidth && currentLine !== '') {
+        lines.push(currentLine);
+        currentLine = words[i];
+      } else {
+        currentLine = testLine;
+      }
+    }
+    lines.push(currentLine);
+    return lines;
   };
 
   const handleDownloadSummaryImage = async () => {
