@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -27,16 +27,20 @@ import {
   ArrowForward as NextStepIcon,
   Assessment as RatingIcon,
   Share as ShareIcon,
-  Download as DownloadIcon
+  Download as DownloadIcon,
+  Image as ImageIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
 
 const MeetingSummary = ({ meetingId, meetingTitle, onClose }) => {
   const [summary, setSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerated, setIsGenerated] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const summaryRef = useRef(null);
 
   const handleGenerateSummary = async () => {
     setIsLoading(true);
@@ -98,6 +102,87 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
       } catch (error) {
         toast.error('分享失败');
       }
+    }
+  };
+
+  const handleGenerateImage = async () => {
+    if (!summary || !summaryRef.current) return;
+    
+    setIsGeneratingImage(true);
+    try {
+      // 使用html2canvas生成高质量图片
+      const canvas = await html2canvas(summaryRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2, // 高清图片
+        useCORS: true,
+        allowTaint: true,
+        width: summaryRef.current.offsetWidth,
+        height: summaryRef.current.offsetHeight,
+        logging: false
+      });
+      
+      return canvas;
+    } catch (error) {
+      console.error('生成摘要长图失败:', error);
+      toast.error('生成摘要长图失败');
+      return null;
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const handleDownloadSummaryImage = async () => {
+    const canvas = await handleGenerateImage();
+    if (!canvas) return;
+    
+    try {
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `会议摘要-${meetingTitle}-${format(new Date(), 'yyyyMMdd-HHmm')}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast.success('摘要长图已下载到本地');
+      }, 'image/png', 1.0);
+    } catch (error) {
+      console.error('下载摘要图片失败:', error);
+      toast.error('下载失败');
+    }
+  };
+
+  const handleShareSummaryImage = async () => {
+    const canvas = await handleGenerateImage();
+    if (!canvas) return;
+    
+    try {
+      if (navigator.share && navigator.canShare) {
+        canvas.toBlob(async (blob) => {
+          const file = new File([blob], `会议摘要-${meetingTitle}.png`, { type: 'image/png' });
+          
+          if (navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: `${meetingTitle} - 会议摘要`,
+                text: summary.executive_summary.substring(0, 100) + '...',
+                files: [file]
+              });
+            } catch (shareError) {
+              await handleDownloadSummaryImage();
+            }
+          } else {
+            await handleDownloadSummaryImage();
+          }
+        }, 'image/png', 1.0);
+      } else {
+        await handleDownloadSummaryImage();
+      }
+    } catch (error) {
+      console.error('分享摘要图片失败:', error);
+      toast.error('分享失败');
     }
   };
 
@@ -193,11 +278,31 @@ ${summary.next_steps.map((step, index) => `${index + 1}. ${step}`).join('\n') ||
             )}
           </Box>
         ) : summary && (
-          <Box>
+          <Box 
+            ref={summaryRef}
+            sx={{ 
+              p: 3, 
+              backgroundColor: '#ffffff',
+              minHeight: '600px'
+            }}
+          >
+            {/* 标题区域 */}
+            <Box sx={{ textAlign: 'center', mb: 4, borderBottom: '3px solid #1976d2', pb: 2 }}>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1976d2', mb: 1 }}>
+                会议AI摘要
+              </Typography>
+              <Typography variant="h6" sx={{ color: '#666', mb: 1 }}>
+                {meetingTitle}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#999' }}>
+                生成时间：{format(new Date(), 'yyyy年MM月dd日 HH:mm', { locale: zhCN })}
+              </Typography>
+            </Box>
+
             {/* 执行摘要 */}
             <Paper sx={{ p: 3, mb: 3, backgroundColor: '#f8f9fa', border: '1px solid #e0e0e0' }}>
               <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
-                执行摘要
+                📋 执行摘要
               </Typography>
               <Typography variant="body1" sx={{ lineHeight: 1.6, color: '#333' }}>
                 {summary.executive_summary}
@@ -363,6 +468,24 @@ ${summary.next_steps.map((step, index) => `${index + 1}. ${step}`).join('\n') ||
                 </Grid>
               )}
             </Grid>
+            
+            {/* 品牌标识区域 */}
+            <Box sx={{ 
+              textAlign: 'center', 
+              mt: 4, 
+              pt: 3,
+              borderTop: '2px solid #e0e0e0'
+            }}>
+              <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 'bold', mb: 1 }}>
+                私人董事会系统
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666' }}>
+                dongshihui.xyz · AI驱动的历史名人智慧对话平台
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#999', display: 'block', mt: 1 }}>
+                本摘要由Claude Sonnet 4 AI自动生成
+              </Typography>
+            </Box>
           </Box>
         )}
       </DialogContent>
@@ -370,11 +493,19 @@ ${summary.next_steps.map((step, index) => `${index + 1}. ${step}`).join('\n') ||
       <DialogActions>
         {isGenerated && summary && (
           <>
+            <Button 
+              startIcon={isGeneratingImage ? <CircularProgress size={16} /> : <ImageIcon />}
+              onClick={handleShareSummaryImage}
+              disabled={isGeneratingImage}
+              variant="contained"
+            >
+              {isGeneratingImage ? '生成中...' : '分享长图'}
+            </Button>
             <Button startIcon={<ShareIcon />} onClick={handleShare}>
-              分享摘要
+              分享文本
             </Button>
             <Button startIcon={<DownloadIcon />} onClick={handleDownload}>
-              下载报告
+              复制报告
             </Button>
           </>
         )}
