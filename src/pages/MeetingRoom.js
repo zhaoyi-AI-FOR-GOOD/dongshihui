@@ -62,6 +62,7 @@ const MeetingRoom = () => {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
@@ -250,22 +251,23 @@ const MeetingRoom = () => {
     return (current + 1) % participants.length;
   };
 
-  // 智能滚动控制
+  // 智能滚动控制 - 只滚动会议讨论记录容器
   useEffect(() => {
     // 检测是否有新发言
     const currentCount = statements.length;
     const hasNewStatement = currentCount > previousStatementsCount;
     
-    if (hasNewStatement) {
-      // 检查用户是否在页面底部附近（距离底部300px内）
-      const isNearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
-      
-      // 只有在用户接近底部或明确开启自动滚动时才滚动
-      if (autoScroll || isNearBottom) {
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      }
+    if (hasNewStatement && autoScroll && messagesContainerRef.current) {
+      // 滚动会议讨论记录容器到底部
+      setTimeout(() => {
+        const container = messagesContainerRef.current;
+        if (container) {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
       
       setPreviousStatementsCount(currentCount);
     }
@@ -561,7 +563,15 @@ const MeetingRoom = () => {
                 {/* 手动滚到底部按钮 */}
                 <IconButton
                   size="small"
-                  onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => {
+                    const container = messagesContainerRef.current;
+                    if (container) {
+                      container.scrollTo({
+                        top: container.scrollHeight,
+                        behavior: 'smooth'
+                      });
+                    }
+                  }}
                   title="滚动到最新发言"
                 >
                   <ScrollUpIcon sx={{ fontSize: 18 }} />
@@ -578,11 +588,14 @@ const MeetingRoom = () => {
               </Box>
             </Box>
             
-            <Box sx={{ 
-              flex: 1, 
-              overflow: 'auto', 
-              p: isMobile ? 1.5 : 2 
-            }}>
+            <Box 
+              ref={messagesContainerRef}
+              sx={{ 
+                flex: 1, 
+                overflow: 'auto', 
+                p: isMobile ? 1.5 : 2 
+              }}
+            >
               {statements.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 6 }}>
                   <ForumIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
