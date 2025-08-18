@@ -271,10 +271,10 @@ const CreateMeeting = () => {
               
               <Alert severity="info" sx={{ mt: 2 }}>
                 <strong>{discussionModes[formData.discussion_mode]}</strong>: 
-                {formData.discussion_mode === 'round_robin' && ' 董事们将按顺序轮流发言'}
-                {formData.discussion_mode === 'debate' && ' 董事们将进行对抗性辩论'}
-                {formData.discussion_mode === 'focus' && ' 专注于单一主题的深度讨论'}
-                {formData.discussion_mode === 'free' && ' 董事们可以自由插话和互动'}
+                {formData.discussion_mode === 'round_robin' && ' 严格按加入顺序轮流发言，每轮每人一次机会，有序公平'}
+                {formData.discussion_mode === 'debate' && ' 自动分正反方阵营，支持反驳回击，观点激烈碰撞'}
+                {formData.discussion_mode === 'focus' && ' 围绕核心议题逐层深入，结构化探讨，层次清晰'}
+                {formData.discussion_mode === 'free' && ' 随机发言顺序，支持举手插话，自然灵活互动'}
               </Alert>
             </Paper>
           </Grid>

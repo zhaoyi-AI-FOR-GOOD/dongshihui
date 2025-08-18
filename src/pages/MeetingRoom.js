@@ -46,6 +46,8 @@ import FavoriteButton from '../components/FavoriteButton';
 import QuoteCard from '../components/QuoteCard';
 import MeetingSummary from '../components/MeetingSummary';
 import MeetingExport from '../components/MeetingExport';
+import DiscussionModeDisplay from '../components/DiscussionModeDisplay';
+import StatementDisplay from '../components/StatementDisplay';
 
 const MeetingRoom = () => {
   const navigate = useNavigate();
@@ -60,6 +62,7 @@ const MeetingRoom = () => {
   const [selectedStatementId, setSelectedStatementId] = useState(null);
   const [showSummary, setShowSummary] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [rebuttalTarget, setRebuttalTarget] = useState(null);
 
   // 获取会议详情
   const { data: meetingResponse, isLoading, error, refetch } = useQuery(
@@ -207,6 +210,32 @@ const MeetingRoom = () => {
     setShowQuoteCard(true);
   };
 
+  // 处理反驳（辩论模式专用）
+  const handleRebuttal = (statement) => {
+    setRebuttalTarget(statement);
+    // 在辩论模式下，立即生成反驳发言
+    if (meeting.discussion_mode === 'debate') {
+      handleGenerateNext();
+    }
+  };
+
+  // 计算当前和下一个发言者（轮流发言模式）
+  const getCurrentSpeakerIndex = () => {
+    if (meeting?.discussion_mode !== 'round_robin') return -1;
+    
+    const currentRoundStatements = statements.filter(s => 
+      s.round_number === meeting.current_round && s.content_type === 'regular'
+    );
+    return currentRoundStatements.length % participants.length;
+  };
+
+  const getNextSpeakerIndex = () => {
+    if (meeting?.discussion_mode !== 'round_robin') return -1;
+    
+    const current = getCurrentSpeakerIndex();
+    return (current + 1) % participants.length;
+  };
+
   // 自动滚动到底部
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -275,8 +304,29 @@ const MeetingRoom = () => {
                   color={statusInfo.color} 
                   size="small" 
                 />
+                
+                {/* 讨论模式标识 */}
+                <Chip 
+                  label={
+                    meeting.discussion_mode === 'round_robin' ? '轮流发言' :
+                    meeting.discussion_mode === 'debate' ? '辩论模式' :
+                    meeting.discussion_mode === 'focus' ? '聚焦讨论' :
+                    meeting.discussion_mode === 'free' ? '自由发言' : '未知模式'
+                  }
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    color: meeting.discussion_mode === 'debate' ? '#D32F2F' :
+                           meeting.discussion_mode === 'focus' ? '#7B1FA2' :
+                           meeting.discussion_mode === 'free' ? '#388E3C' : '#1565C0',
+                    borderColor: meeting.discussion_mode === 'debate' ? '#D32F2F' :
+                                meeting.discussion_mode === 'focus' ? '#7B1FA2' :
+                                meeting.discussion_mode === 'free' ? '#388E3C' : '#1565C0'
+                  }}
+                />
+                
                 <Typography variant="body2" color="text.secondary">
-                  第 {meeting.current_round}/{meeting.max_rounds} 轮
+                  {meeting.discussion_mode === 'debate' ? '第' : meeting.discussion_mode === 'focus' ? '第' : '第'} {meeting.current_round}/{meeting.max_rounds} {meeting.discussion_mode === 'debate' ? '回合' : meeting.discussion_mode === 'focus' ? '层' : '轮'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {statements.length} 条发言
@@ -316,7 +366,10 @@ const MeetingRoom = () => {
                   disabled={isGenerating}
                   color="primary"
                 >
-                  {isGenerating ? '生成中...' : '下一个发言'}
+                  {isGenerating ? '生成中...' : 
+                   meeting.discussion_mode === 'debate' ? '继续辩论' :
+                   meeting.discussion_mode === 'focus' ? '深入讨论' :
+                   meeting.discussion_mode === 'free' ? '自由发言' : '下一个发言'}
                 </Button>
               </>
             )}
@@ -421,131 +474,48 @@ const MeetingRoom = () => {
                   </Typography>
                 </Box>
               ) : (
-                statements.map((statement, index) => {
-                  const director = statement.Director;
-                  const isNewRound = index === 0 || statement.round_number !== statements[index - 1]?.round_number;
-                  const isUserQuestion = statement.content_type === 'user_question';
-                  
-                  return (
-                    <React.Fragment key={statement.id}>
-                      {/* 轮次分隔符 */}
-                      {isNewRound && (
-                        <Box sx={{ textAlign: 'center', my: 2 }}>
-                          <Divider>
-                            <Chip 
-                              label={`第 ${statement.round_number} 轮`} 
-                              size="small" 
-                              color="primary" 
-                            />
-                          </Divider>
-                        </Box>
-                      )}
-                      
-                      {/* 发言内容 */}
-                      <Card sx={{ 
-                        mb: 3,
-                        backgroundColor: isUserQuestion ? '#E3F2FD' : '#FAFAFA',
-                        border: isUserQuestion ? '2px solid #1565C0' : '1px solid #E0E0E0',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
-                          transform: 'translateY(-1px)'
-                        }
-                      }}>
-                        <CardContent sx={{ p: 3 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <Avatar 
-                              src={isUserQuestion ? null : director?.avatar_url}
-                              sx={{ 
-                                width: 40, 
-                                height: 40, 
-                                mr: 2,
-                                backgroundColor: isUserQuestion ? '#1565C0' : '#F57C00',
-                                border: '3px solid #fff',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                              }}
-                            >
-                              <PersonIcon />
-                            </Avatar>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography 
-                                variant="subtitle1" 
+                <>
+                  {statements.map((statement, index) => {
+                    const isNewRound = index === 0 || statement.round_number !== statements[index - 1]?.round_number;
+                    
+                    return (
+                      <React.Fragment key={statement.id}>
+                        {/* 轮次分隔符 - 根据模式显示不同样式 */}
+                        {isNewRound && meeting.discussion_mode && (
+                          <Box sx={{ textAlign: 'center', my: 3 }}>
+                            <Divider>
+                              <Chip 
+                                label={meeting.discussion_mode === 'debate' ? `第${statement.round_number}回合` : 
+                                       meeting.discussion_mode === 'focus' ? `第${statement.round_number}层讨论` :
+                                       meeting.discussion_mode === 'free' ? `阶段${statement.round_number}` :
+                                       `第${statement.round_number}轮`} 
+                                size="small" 
+                                color="primary"
                                 sx={{ 
-                                  fontWeight: 600,
-                                  color: isUserQuestion ? '#1565C0' : '#333',
-                                  fontSize: '1.1rem'
+                                  backgroundColor: meeting.discussion_mode === 'debate' ? '#D32F2F' :
+                                                  meeting.discussion_mode === 'focus' ? '#7B1FA2' :
+                                                  meeting.discussion_mode === 'free' ? '#388E3C' : '#1565C0',
+                                  color: 'white',
+                                  fontWeight: 600
                                 }}
-                              >
-                                {isUserQuestion ? '用户提问' : director?.name}
-                              </Typography>
-                              <Typography 
-                                variant="body2" 
-                                sx={{ 
-                                  color: '#666',
-                                  fontWeight: 500,
-                                  fontSize: '0.9rem'
-                                }}
-                              >
-                                {isUserQuestion ? '会议参与者' : director?.title}
-                                {statement.created_at && (
-                                  <Typography 
-                                    component="span" 
-                                    sx={{ 
-                                      ml: 1, 
-                                      color: '#888',
-                                      fontWeight: 600,
-                                      fontSize: '0.85rem'
-                                    }}
-                                  >
-                                    · {format(new Date(statement.created_at), 'HH:mm', { locale: zhCN })}
-                                  </Typography>
-                                )}
-                              </Typography>
-                            </Box>
-                            {statement.content_type === 'opening' && (
-                              <Chip label="开场" size="small" color="success" />
-                            )}
-                            {statement.content_type === 'closing' && (
-                              <Chip label="结语" size="small" color="error" />
-                            )}
-                            {statement.content_type === 'user_question' && (
-                              <Chip label="用户提问" size="small" color="info" />
-                            )}
-                            {!isUserQuestion && (
-                              <>
-                                <FavoriteButton
-                                  statementId={statement.id}
-                                  favoriteType="statement"
-                                />
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleShareQuote(statement.id)}
-                                  title="生成金句卡片"
-                                >
-                                  <ShareIcon />
-                                </IconButton>
-                              </>
-                            )}
+                              />
+                            </Divider>
                           </Box>
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
-                              whiteSpace: 'pre-wrap',
-                              fontSize: isUserQuestion ? '1rem' : '1.1rem',
-                              lineHeight: 1.7,
-                              color: isUserQuestion ? '#1565C0' : '#333',
-                              fontWeight: isUserQuestion ? 500 : 400,
-                              letterSpacing: '0.02em',
-                              mt: 1
-                            }}
-                          >
-                            {statement.content}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </React.Fragment>
-                  );
-                })
+                        )}
+                        
+                        {/* 使用新的发言显示组件 */}
+                        <StatementDisplay
+                          statement={statement}
+                          index={index}
+                          statements={statements}
+                          meeting={meeting}
+                          onShareQuote={handleShareQuote}
+                          onRebuttal={meeting.discussion_mode === 'debate' ? handleRebuttal : null}
+                        />
+                      </React.Fragment>
+                    );
+                  })}
+                </>
               )}
               <div ref={messagesEndRef} />
             </Box>
@@ -554,6 +524,15 @@ const MeetingRoom = () => {
 
         {/* 右侧：会议信息和互动 */}
         <Grid item xs={12} md={4}>
+          {/* 讨论模式显示 */}
+          <DiscussionModeDisplay
+            meeting={meeting}
+            participants={participants}
+            statements={statements}
+            currentSpeakerIndex={getCurrentSpeakerIndex()}
+            nextSpeakerIndex={getNextSpeakerIndex()}
+          />
+          
           {/* 用户提问区域 */}
           {['discussing', 'debating', 'paused'].includes(meeting.status) && (
             <QuestionBox 
@@ -619,7 +598,11 @@ const MeetingRoom = () => {
           {/* 提示信息 */}
           {meeting.status === 'discussing' && !isGenerating && (
             <Alert severity="info">
-              点击"下一个发言"让董事们继续讨论
+              {meeting.discussion_mode === 'round_robin' && `下一位发言：${participants[getNextSpeakerIndex()]?.director?.name || '等待确定'}`}
+              {meeting.discussion_mode === 'debate' && '点击"继续辩论"让对方进行反驳'}
+              {meeting.discussion_mode === 'focus' && '点击"深入讨论"进入下一层分析'}
+              {meeting.discussion_mode === 'free' && '点击"自由发言"让董事们随机互动'}
+              {!meeting.discussion_mode && '点击"下一个发言"让董事们继续讨论'}
             </Alert>
           )}
         </Grid>
