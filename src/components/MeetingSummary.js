@@ -128,10 +128,13 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, width, height);
       
+      // 定义安全的主题颜色
+      const safeColor = '#1976d2';
+      
       let yPos = 30;
       
       // 绘制标题区域
-      ctx.fillStyle = '#1976d2';
+      ctx.fillStyle = safeColor;
       ctx.fillRect(0, yPos, width, 60);
       
       ctx.fillStyle = '#ffffff';
@@ -161,7 +164,7 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
       ctx.fillRect(30, yPos, width - 60, summaryBoxHeight);
       ctx.strokeRect(30, yPos, width - 60, summaryBoxHeight);
       
-      ctx.fillStyle = '#1976d2';
+      ctx.fillStyle = safeColor;
       ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
       ctx.textAlign = 'left';
       ctx.fillText('■ 执行摘要', 45, yPos + 20);
@@ -179,7 +182,7 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
       yPos += summaryBoxHeight + 30;
       
       // 关键要点
-      ctx.fillStyle = '#1976d2';
+      ctx.fillStyle = safeColor;
       ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
       ctx.fillText('• 关键要点', 30, yPos);
       
@@ -198,7 +201,7 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
       yPos += 20;
       
       // 董事亮点
-      ctx.fillStyle = '#1976d2';
+      ctx.fillStyle = safeColor;
       ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
       ctx.fillText('◆ 董事亮点', 30, yPos);
       
@@ -206,7 +209,7 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
       ctx.fillStyle = '#333333';
       ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
       summary.participant_highlights.slice(0, 4).forEach((highlight) => {
-        ctx.fillStyle = '#1976d2';
+        ctx.fillStyle = safeColor;
         ctx.fillText(`> ${highlight.director}:`, 45, yPos);
         ctx.fillStyle = '#333333';
         const contributionLines = wrapText(ctx, highlight.key_contribution, width - 140);
@@ -229,7 +232,7 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
       yPos += 30;
       
       // 品牌信息
-      ctx.fillStyle = '#1976d2';
+      ctx.fillStyle = safeColor;
       ctx.font = 'bold 18px PingFang SC, Microsoft YaHei, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('私人董事会', width / 2, yPos);

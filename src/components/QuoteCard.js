@@ -148,31 +148,29 @@ const QuoteCard = ({ statementId, onClose }) => {
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       
-      // 绘制背景
+      // 绘制背景 - 使用rgba格式确保兼容性
       const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, cardData.analysis.theme_color + '22');
-      gradient.addColorStop(1, cardData.analysis.theme_color + '11');
+      const safeColor = cardData.analysis.theme_color || '#1976d2';
+      gradient.addColorStop(0, 'rgba(25, 118, 210, 0.1)');
+      gradient.addColorStop(1, 'rgba(25, 118, 210, 0.05)');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
       
       // 绘制边框
-      ctx.strokeStyle = cardData.analysis.theme_color;
+      ctx.strokeStyle = safeColor;
       ctx.lineWidth = 2;
       ctx.strokeRect(2, 2, width - 4, height - 4);
       
-      // 绘制装饰圆形
-      const decorGradient = ctx.createRadialGradient(width - 50, 50, 0, width - 50, 50, 100);
-      decorGradient.addColorStop(0, cardData.analysis.theme_color + '15');
-      decorGradient.addColorStop(1, 'transparent');
-      ctx.fillStyle = decorGradient;
+      // 绘制装饰圆形 - 使用rgba格式确保兼容性
+      ctx.fillStyle = 'rgba(25, 118, 210, 0.05)';
       ctx.beginPath();
-      ctx.arc(width - 50, 50, 100, 0, 2 * Math.PI);
+      ctx.arc(width - 50, 50, 80, 0, 2 * Math.PI);
       ctx.fill();
       
       let yPos = 40;
       
       // 绘制分类标签
-      ctx.fillStyle = cardData.analysis.theme_color;
+      ctx.fillStyle = safeColor;
       ctx.fillRect(30, yPos, 120, 30);
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 14px PingFang SC, Microsoft YaHei, sans-serif';
@@ -207,26 +205,17 @@ const QuoteCard = ({ statementId, onClose }) => {
       const quoteBoxHeight = 120;
       ctx.fillRect(30, yPos, width - 60, quoteBoxHeight);
       
-      // 绘制引号装饰 - 使用简单线条替代特殊字符
-      ctx.strokeStyle = cardData.analysis.theme_color + '30';
-      ctx.lineWidth = 3;
-      // 左引号
-      ctx.beginPath();
-      ctx.arc(50, yPos + 20, 8, Math.PI * 0.7, Math.PI * 1.3);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(55, yPos + 15, 8, Math.PI * 0.7, Math.PI * 1.3);
-      ctx.stroke();
-      // 右引号
-      ctx.beginPath();
-      ctx.arc(width - 50, yPos + quoteBoxHeight - 30, 8, Math.PI * -0.3, Math.PI * 0.3);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(width - 55, yPos + quoteBoxHeight - 25, 8, Math.PI * -0.3, Math.PI * 0.3);
-      ctx.stroke();
+      // 绘制引号装饰 - 使用rgba格式
+      ctx.fillStyle = 'rgba(25, 118, 210, 0.2)';
+      // 左上角装饰
+      ctx.fillRect(45, yPos + 15, 15, 3);
+      ctx.fillRect(45, yPos + 15, 3, 15);
+      // 右下角装饰
+      ctx.fillRect(width - 60, yPos + quoteBoxHeight - 20, 15, 3);
+      ctx.fillRect(width - 48, yPos + quoteBoxHeight - 32, 3, 15);
       
       // 绘制金句文本（多行处理）
-      ctx.fillStyle = cardData.analysis.theme_color;
+      ctx.fillStyle = safeColor;
       ctx.font = 'bold 18px PingFang SC, Microsoft YaHei, sans-serif';
       ctx.textAlign = 'center';
       
@@ -247,7 +236,7 @@ const QuoteCard = ({ statementId, onClose }) => {
         ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
         ctx.textAlign = 'center';
         const keywordText = cardData.analysis.keywords.join(' · ');
-        ctx.fillStyle = cardData.analysis.theme_color;
+        ctx.fillStyle = safeColor;
         ctx.fillText(keywordText, width / 2, yPos);
         yPos += 30;
       }
