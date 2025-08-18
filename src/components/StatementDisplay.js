@@ -33,6 +33,7 @@ const StatementDisplay = ({
 }) => {
   const director = statement.Director;
   const isUserQuestion = statement.content_type === 'user_question';
+  const isQuestionResponse = statement.content_type === 'question_response';
   const discussionMode = meeting?.discussion_mode || 'round_robin';
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -45,9 +46,22 @@ const StatementDisplay = ({
   
   // 获取模式特定的样式
   const getModeSpecificStyle = () => {
+    // 用户提问的样式
+    if (isUserQuestion) {
+      return { bg: '#E3F2FD', border: '2px solid #1565C0' };
+    }
+    
+    // 董事回复用户问题的样式
+    if (isQuestionResponse) {
+      return { 
+        bg: '#FFF8E1', 
+        border: '2px solid #FFA000',
+        borderLeft: '6px solid #FFA000'
+      };
+    }
+    
     switch (discussionMode) {
       case 'debate':
-        if (isUserQuestion) return { bg: '#E3F2FD', border: '2px solid #1565C0' };
         return {
           bg: isProSide ? '#E8F5E8' : '#FFEBEE',
           border: isProSide ? '2px solid #2E7D32' : '2px solid #C62828',
@@ -56,20 +70,20 @@ const StatementDisplay = ({
         };
       case 'focus':
         return {
-          bg: isUserQuestion ? '#E3F2FD' : '#F3E5F5',
-          border: isUserQuestion ? '2px solid #1565C0' : `2px solid #7B1FA2`,
-          borderLeft: isUserQuestion ? undefined : '6px solid #7B1FA2'
+          bg: '#F3E5F5',
+          border: `2px solid #7B1FA2`,
+          borderLeft: '6px solid #7B1FA2'
         };
       case 'free':
         return {
-          bg: isUserQuestion ? '#E3F2FD' : '#E8F5E8',
-          border: isUserQuestion ? '2px solid #1565C0' : '1px solid #4CAF50',
+          bg: '#E8F5E8',
+          border: '1px solid #4CAF50',
           borderRadius: '16px'
         };
       default: // round_robin
         return {
-          bg: isUserQuestion ? '#E3F2FD' : '#FAFAFA',
-          border: isUserQuestion ? '2px solid #1565C0' : '1px solid #E0E0E0'
+          bg: '#FAFAFA',
+          border: '1px solid #E0E0E0'
         };
     }
   };
@@ -79,6 +93,7 @@ const StatementDisplay = ({
   // 获取发言者标识
   const getSpeakerLabel = () => {
     if (isUserQuestion) return '用户提问';
+    if (isQuestionResponse) return `${director?.name} (回复提问)`;
     
     switch (discussionMode) {
       case 'debate':
@@ -95,6 +110,7 @@ const StatementDisplay = ({
   // 获取头像颜色
   const getAvatarColor = () => {
     if (isUserQuestion) return '#1565C0';
+    if (isQuestionResponse) return '#FFA000';
     
     switch (discussionMode) {
       case 'debate':
@@ -131,7 +147,7 @@ const StatementDisplay = ({
         <CardContent sx={{ p: isMobile ? 2 : 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Avatar 
-              src={isUserQuestion ? null : director?.avatar_url}
+              src={(isUserQuestion || isQuestionResponse) ? director?.avatar_url : director?.avatar_url}
               sx={{ 
                 width: isMobile ? 36 : 40, 
                 height: isMobile ? 36 : 40, 
@@ -148,7 +164,7 @@ const StatementDisplay = ({
                 variant="subtitle1" 
                 sx={{ 
                   fontWeight: 600,
-                  color: isUserQuestion ? '#1565C0' : '#333',
+                  color: isUserQuestion ? '#1565C0' : isQuestionResponse ? '#FFA000' : '#333',
                   fontSize: isMobile ? '1rem' : '1.1rem'
                 }}
               >
@@ -206,6 +222,9 @@ const StatementDisplay = ({
             {statement.content_type === 'user_question' && (
               <Chip label="用户提问" size="small" color="info" />
             )}
+            {statement.content_type === 'question_response' && (
+              <Chip label="回复提问" size="small" color="warning" />
+            )}
             
             {!isUserQuestion && (
               <Box sx={{ 
@@ -215,8 +234,9 @@ const StatementDisplay = ({
                 alignItems: isMobile ? 'flex-end' : 'center'
               }}>
                 <FavoriteButton
-                  statementId={statement.id}
-                  favoriteType="statement"
+                  statementId={isQuestionResponse ? null : statement.id}
+                  responseId={isQuestionResponse ? statement.id : null}
+                  favoriteType={isQuestionResponse ? "response" : "statement"}
                 />
                 <IconButton
                   size={isMobile ? 'medium' : 'small'}
@@ -254,8 +274,8 @@ const StatementDisplay = ({
               whiteSpace: 'pre-wrap',
               fontSize: isMobile ? (isUserQuestion ? '0.95rem' : '1rem') : (isUserQuestion ? '1rem' : '1.1rem'),
               lineHeight: isMobile ? 1.6 : 1.7,
-              color: isUserQuestion ? '#1565C0' : '#333',
-              fontWeight: isUserQuestion ? 500 : 400,
+              color: isUserQuestion ? '#1565C0' : isQuestionResponse ? '#E65100' : '#333',
+              fontWeight: isUserQuestion ? 500 : isQuestionResponse ? 500 : 400,
               letterSpacing: '0.02em',
               mt: 1
             }}

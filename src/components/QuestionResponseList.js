@@ -71,40 +71,12 @@ const QuestionResponseList = ({ questions = [], onQuestionsUpdate }) => {
           <AccordionDetails>
             {question.responses && question.responses.length > 0 ? (
               <Box>
-                <Typography variant="subtitle2" gutterBottom>
-                  董事们的回应：
+                <Typography variant="body2" color="info.main" sx={{ fontStyle: 'italic' }}>
+                  ✅ 董事们已在会议讨论记录中回复了此问题 ({question.responses.length}位董事回复)
                 </Typography>
-                {question.responses.map((response, index) => (
-                  <Paper 
-                    key={response.id} 
-                    elevation={1} 
-                    sx={{ p: 2, mb: 2, backgroundColor: '#f8f9fa' }}
-                  >
-                    <Box display="flex" alignItems="center" mb={1}>
-                      <Avatar 
-                        src={response.director.avatar_url} 
-                        sx={{ width: 32, height: 32, mr: 1 }}
-                      >
-                        {response.director.name?.[0]}
-                      </Avatar>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="subtitle2">
-                          {response.director.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {response.director.title}
-                        </Typography>
-                      </Box>
-                      <FavoriteButton
-                        responseId={response.id}
-                        favoriteType="response"
-                      />
-                    </Box>
-                    <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
-                      {response.content}
-                    </Typography>
-                  </Paper>
-                ))}
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  请在左侧的"会议讨论记录"中查看董事们的详细回复内容。
+                </Typography>
               </Box>
             ) : (
               <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
