@@ -14,15 +14,18 @@ import {
 import {
   Share as ShareIcon,
   Download as DownloadIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  Image as ImageIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import html2canvas from 'html2canvas';
 import toast from 'react-hot-toast';
 
 const QuoteCard = ({ statementId, onClose }) => {
   const [cardData, setCardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const cardRef = useRef(null);
 
   React.useEffect(() => {
@@ -74,12 +77,96 @@ const QuoteCard = ({ statementId, onClose }) => {
     }
   };
 
+  const handleGenerateImage = async () => {
+    if (!cardData || !cardRef.current) return;
+    
+    setIsGeneratingImage(true);
+    try {
+      // 使用html2canvas生成高质量图片
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2, // 高清图片
+        useCORS: true,
+        allowTaint: true,
+        width: cardRef.current.offsetWidth,
+        height: cardRef.current.offsetHeight,
+        logging: false
+      });
+      
+      return canvas;
+    } catch (error) {
+      console.error('生成图片失败:', error);
+      toast.error('生成图片失败');
+      return null;
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    const canvas = await handleGenerateImage();
+    if (!canvas) return;
+    
+    try {
+      // 将canvas转换为blob并下载
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `金句卡片-${cardData.director.name}-${format(new Date(cardData.created_at), 'yyyyMMdd-HHmm')}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast.success('长图已下载到本地');
+      }, 'image/png', 1.0);
+    } catch (error) {
+      console.error('下载图片失败:', error);
+      toast.error('下载失败');
+    }
+  };
+
+  const handleShareImage = async () => {
+    const canvas = await handleGenerateImage();
+    if (!canvas) return;
+    
+    try {
+      // 尝试使用Web Share API分享图片
+      if (navigator.share && navigator.canShare) {
+        canvas.toBlob(async (blob) => {
+          const file = new File([blob], `金句卡片-${cardData.director.name}.png`, { type: 'image/png' });
+          
+          if (navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: `${cardData.director.name}的金句`,
+                text: `"${cardData.analysis.highlight_quote || cardData.content}" —— ${cardData.director.name}`,
+                files: [file]
+              });
+            } catch (shareError) {
+              // 如果分享失败，退回到下载
+              await handleDownloadImage();
+            }
+          } else {
+            await handleDownloadImage();
+          }
+        }, 'image/png', 1.0);
+      } else {
+        // 不支持Web Share API，直接下载
+        await handleDownloadImage();
+      }
+    } catch (error) {
+      console.error('分享图片失败:', error);
+      toast.error('分享失败');
+    }
+  };
+
   const handleDownload = async () => {
     if (!cardData || !cardRef.current) return;
 
     try {
-      // 使用html2canvas库来截图（需要安装）
-      // 这里提供一个简化版本，复制文本内容
+      // 提供文本版本的备选方案
       const cardText = `${cardData.director.name}（${cardData.director.title}）
 
 "${cardData.content}"
@@ -96,7 +183,7 @@ const QuoteCard = ({ statementId, onClose }) => {
       await navigator.clipboard.writeText(cardText);
       toast.success('卡片内容已复制到剪贴板');
     } catch (error) {
-      toast.error('下载失败');
+      toast.error('复制失败');
     }
   };
 
@@ -147,7 +234,10 @@ const QuoteCard = ({ statementId, onClose }) => {
               border: `2px solid ${cardData.analysis.theme_color}`,
               borderRadius: 3,
               position: 'relative',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              width: 480, // 固定宽度，适合分享
+              minHeight: 600, // 最小高度
+              margin: '0 auto'
             }}
           >
             {/* 装饰性背景 */}
@@ -277,29 +367,58 @@ const QuoteCard = ({ statementId, onClose }) => {
               </Typography>
             </Box>
 
-            {/* 品牌标识 */}
-            <Box sx={{ textAlign: 'center', borderTop: 1, borderColor: 'divider', pt: 2 }}>
-              <Typography variant="caption" color="text.secondary" fontWeight="bold">
+            {/* 品牌标识和网站信息 */}
+            <Box sx={{ 
+              textAlign: 'center', 
+              borderTop: 1, 
+              borderColor: 'divider', 
+              pt: 2,
+              mt: 2
+            }}>
+              <Typography variant="body2" color="text.secondary" fontWeight="bold" sx={{ mb: 1 }}>
                 私人董事会系统
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                dongshihui.xyz · AI驱动的历史名人智慧对话平台
               </Typography>
             </Box>
           </Paper>
 
           {/* 操作按钮 */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3, pb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 3, pb: 2, flexWrap: 'wrap' }}>
             <Button
               variant="contained"
+              startIcon={isGeneratingImage ? <CircularProgress size={16} color="inherit" /> : <ImageIcon />}
+              onClick={handleShareImage}
+              disabled={isGeneratingImage}
+              sx={{ 
+                backgroundColor: cardData.analysis.theme_color,
+                minWidth: 120
+              }}
+            >
+              {isGeneratingImage ? '生成中...' : '分享长图'}
+            </Button>
+            <Button
+              variant="outlined"
               startIcon={<ShareIcon />}
               onClick={handleShare}
-              sx={{ backgroundColor: cardData.analysis.theme_color }}
+              sx={{ 
+                borderColor: cardData.analysis.theme_color, 
+                color: cardData.analysis.theme_color,
+                minWidth: 100
+              }}
             >
-              分享金句
+              分享文本
             </Button>
             <Button
               variant="outlined"
               startIcon={<DownloadIcon />}
               onClick={handleDownload}
-              sx={{ borderColor: cardData.analysis.theme_color, color: cardData.analysis.theme_color }}
+              sx={{ 
+                borderColor: cardData.analysis.theme_color, 
+                color: cardData.analysis.theme_color,
+                minWidth: 100
+              }}
             >
               复制内容
             </Button>
