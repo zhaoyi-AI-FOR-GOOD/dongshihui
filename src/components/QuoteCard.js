@@ -125,127 +125,220 @@ const QuoteCard = ({ statementId, onClose }) => {
   };
 
   const handleGenerateImage = async () => {
-    if (!cardData || !cardRef.current) return;
+    if (!cardData) return;
     
     setIsGeneratingImage(true);
     try {
-      // 创建纯净的HTML结构用于html2canvas转换
-      const imageContainer = document.createElement('div');
-      imageContainer.style.cssText = `
+      // 创建完全独立的iframe来隔离CSS
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText = `
+        position: fixed;
+        top: -9999px;
+        left: -9999px;
         width: 480px;
-        min-height: 600px;
-        padding: 30px;
-        background: linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(25, 118, 210, 0.05) 100%);
-        border: 2px solid #1976d2;
-        border-radius: 12px;
-        position: relative;
-        overflow: hidden;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-        color: #333;
-        box-sizing: border-box;
+        height: 600px;
+        border: none;
+        visibility: hidden;
       `;
+      document.body.appendChild(iframe);
       
-      // 创建内容HTML
-      imageContainer.innerHTML = `
-        <div style="position: absolute; top: -30px; right: -30px; width: 160px; height: 160px; background: radial-gradient(circle, rgba(25, 118, 210, 0.05) 0%, transparent 70%); border-radius: 50%;"></div>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-          <div style="background: #1976d2; color: white; padding: 6px 16px; border-radius: 4px; font-weight: bold; font-size: 14px;">
-            ${cardData.analysis.category || '发言'}
-          </div>
-          <div style="font-size: 12px; color: #666;">
-            第${cardData.round_number}轮发言
-          </div>
-        </div>
-        
-        <div style="display: flex; align-items: center; margin-bottom: 24px;">
-          <div style="width: 60px; height: 60px; border-radius: 50%; background: #1976d2; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; margin-right: 16px; border: 3px solid #1976d2;">
-            ${cardData.director.name ? cardData.director.name[0] : 'A'}
-          </div>
-          <div>
-            <div style="font-size: 20px; font-weight: bold; margin-bottom: 4px;">
-              ${cardData.director.name || '匿名董事'}
-            </div>
-            <div style="font-size: 16px; color: #666; margin-bottom: 2px;">
-              ${cardData.director.title || '董事会成员'}
-            </div>
-            <div style="font-size: 14px; color: #666;">
-              ${cardData.director.era || '现代'}
-            </div>
-          </div>
-        </div>
-        
-        <div style="text-align: center; margin: 24px 0; padding: 24px; background: rgba(255,255,255,0.9); border-radius: 8px; position: relative; min-height: 80px; display: flex; align-items: center; justify-content: center;">
-          <div style="position: absolute; top: 8px; left: 16px; width: 12px; height: 12px; border-left: 3px solid rgba(25, 118, 210, 0.2); border-top: 3px solid rgba(25, 118, 210, 0.2);"></div>
-          <div style="position: absolute; bottom: 8px; right: 16px; width: 12px; height: 12px; border-right: 3px solid rgba(25, 118, 210, 0.2); border-bottom: 3px solid rgba(25, 118, 210, 0.2);"></div>
-          <div style="font-size: 18px; font-weight: bold; line-height: 1.4; color: #1976d2; font-style: italic; max-width: 320px; word-break: break-word; overflow-wrap: break-word;">
-            ${(cardData.analysis.highlight_quote || cardData.content || '精彩发言').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\u3000-\u303f\uff00-\uffef\s.,!?;:()"""''，。！？；：（）]/g, '')}
-          </div>
-        </div>
-        
-        ${cardData.analysis.keywords && cardData.analysis.keywords.length > 0 ? `
-        <div style="text-align: center; margin: 16px 0;">
-          ${cardData.analysis.keywords.slice(0, 5).map(keyword => 
-            `<span style="display: inline-block; border: 1px solid #1976d2; color: #1976d2; padding: 4px 8px; margin: 2px; border-radius: 12px; font-size: 12px; background: white;">${keyword.replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '')}</span>`
-          ).join('')}
-        </div>
-        ` : ''}
-        
-        <div style="text-align: center; margin: 20px 0; color: #666;">
-          <div style="font-size: 14px; margin-bottom: 4px;">
-            来自会议：${(cardData.meeting.title || '未知会议').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\s]/g, '')}
-          </div>
-          <div style="font-size: 12px;">
-            ${format(new Date(cardData.created_at), 'yyyy年MM月dd日', { locale: zhCN })}
-          </div>
-        </div>
-        
-        <div style="border-top: 1px solid #e0e0e0; padding-top: 16px; margin-top: 20px; text-align: center;">
-          <div style="font-size: 16px; font-weight: bold; color: #1976d2; margin-bottom: 8px;">
-            私人董事会
-          </div>
-          <div style="font-size: 12px; color: #666;">
-            dongshihui.xyz 与历史人物共商大事
-          </div>
-        </div>
-      `;
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
       
-      // 临时添加到DOM中
-      imageContainer.style.position = 'fixed';
-      imageContainer.style.top = '-9999px';
-      imageContainer.style.left = '-9999px';
-      document.body.appendChild(imageContainer);
+      // 写入完全独立的HTML和CSS
+      iframeDoc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            * { 
+              margin: 0; 
+              padding: 0; 
+              box-sizing: border-box; 
+              font-family: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', sans-serif;
+            }
+            *::before, *::after { 
+              display: none !important; 
+              content: none !important; 
+            }
+            body { 
+              width: 480px; 
+              min-height: 600px; 
+              padding: 30px; 
+              background: linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(25, 118, 210, 0.05) 100%);
+              border: 2px solid #1976d2;
+              border-radius: 12px;
+              position: relative;
+              overflow: hidden;
+              color: #333;
+            }
+            .decor { 
+              position: absolute; 
+              top: -30px; 
+              right: -30px; 
+              width: 160px; 
+              height: 160px; 
+              background: radial-gradient(circle, rgba(25, 118, 210, 0.05) 0%, transparent 70%); 
+              border-radius: 50%; 
+            }
+            .header { 
+              display: flex; 
+              justify-content: space-between; 
+              align-items: center; 
+              margin-bottom: 24px; 
+            }
+            .category { 
+              background: #1976d2; 
+              color: white; 
+              padding: 6px 16px; 
+              border-radius: 4px; 
+              font-weight: bold; 
+              font-size: 14px; 
+            }
+            .round { 
+              font-size: 12px; 
+              color: #666; 
+            }
+            .director-info { 
+              display: flex; 
+              align-items: center; 
+              margin-bottom: 24px; 
+            }
+            .avatar { 
+              width: 60px; 
+              height: 60px; 
+              border-radius: 50%; 
+              background: #1976d2; 
+              color: white; 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              font-weight: bold; 
+              font-size: 20px; 
+              margin-right: 16px; 
+              border: 3px solid #1976d2; 
+            }
+            .name { 
+              font-size: 20px; 
+              font-weight: bold; 
+              margin-bottom: 4px; 
+            }
+            .title { 
+              font-size: 16px; 
+              color: #666; 
+              margin-bottom: 2px; 
+            }
+            .era { 
+              font-size: 14px; 
+              color: #666; 
+            }
+            .quote-box { 
+              text-align: center; 
+              margin: 24px 0; 
+              padding: 24px; 
+              background: rgba(255,255,255,0.9); 
+              border-radius: 8px; 
+              position: relative; 
+              min-height: 80px; 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+            }
+            .quote-text { 
+              font-size: 18px; 
+              font-weight: bold; 
+              line-height: 1.4; 
+              color: #1976d2; 
+              font-style: italic; 
+              max-width: 320px; 
+              word-break: break-word; 
+              overflow-wrap: break-word; 
+            }
+            .meta { 
+              text-align: center; 
+              margin: 20px 0; 
+              color: #666; 
+            }
+            .meeting { 
+              font-size: 14px; 
+              margin-bottom: 4px; 
+            }
+            .date { 
+              font-size: 12px; 
+            }
+            .footer { 
+              border-top: 1px solid #e0e0e0; 
+              padding-top: 16px; 
+              margin-top: 20px; 
+              text-align: center; 
+            }
+            .brand { 
+              font-size: 16px; 
+              font-weight: bold; 
+              color: #1976d2; 
+              margin-bottom: 8px; 
+            }
+            .url { 
+              font-size: 12px; 
+              color: #666; 
+            }
+          </style>
+        </head>
+        <body>
+          <div class="decor"></div>
+          <div class="header">
+            <div class="category">${(cardData.analysis.category || '发言').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '')}</div>
+            <div class="round">第${cardData.round_number}轮发言</div>
+          </div>
+          <div class="director-info">
+            <div class="avatar">${cardData.director.name ? cardData.director.name[0] : 'A'}</div>
+            <div>
+              <div class="name">${(cardData.director.name || '匿名董事').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '')}</div>
+              <div class="title">${(cardData.director.title || '董事会成员').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '')}</div>
+              <div class="era">${(cardData.director.era || '现代').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '')}</div>
+            </div>
+          </div>
+          <div class="quote-box">
+            <div class="quote-text">${(cardData.analysis.highlight_quote || cardData.content || '精彩发言').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\u3000-\u303f\uff00-\uffef\s.,!?;:()"""''，。！？；：（）]/g, '')}</div>
+          </div>
+          <div class="meta">
+            <div class="meeting">来自会议：${(cardData.meeting.title || '未知会议').replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\s]/g, '')}</div>
+            <div class="date">${format(new Date(cardData.created_at), 'yyyy年MM月dd日', { locale: zhCN })}</div>
+          </div>
+          <div class="footer">
+            <div class="brand">私人董事会</div>
+            <div class="url">dongshihui.xyz 与历史人物共商大事</div>
+          </div>
+        </body>
+        </html>
+      `);
+      iframeDoc.close();
       
-      // 使用html2canvas转换，添加CSS清理
-      const canvas = await html2canvas(imageContainer, {
+      // 等待iframe加载完成
+      await new Promise(resolve => {
+        if (iframe.contentWindow.document.readyState === 'complete') {
+          resolve();
+        } else {
+          iframe.onload = resolve;
+        }
+      });
+      
+      // 使用html2canvas转换iframe内容
+      const canvas = await html2canvas(iframe.contentDocument.body, {
         backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
         allowTaint: false,
         foreignObjectRendering: false,
-        removeContainer: true,
+        removeContainer: false,
         imageTimeout: 0,
         logging: false,
         width: 480,
-        height: Math.max(600, imageContainer.offsetHeight),
-        onclone: function(clonedDoc) {
-          // 移除所有可能导致异常字符的CSS伪元素
-          const style = clonedDoc.createElement('style');
-          style.textContent = `
-            *::before, *::after {
-              content: none !important;
-              display: none !important;
-            }
-            * {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif !important;
-            }
-          `;
-          clonedDoc.head.appendChild(style);
-        }
+        height: 600
       });
       
-      // 清理DOM
-      document.body.removeChild(imageContainer);
+      // 清理iframe
+      document.body.removeChild(iframe);
       
       return canvas;
     } catch (error) {
