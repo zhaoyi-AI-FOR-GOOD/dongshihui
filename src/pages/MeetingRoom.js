@@ -692,6 +692,7 @@ const MeetingRoom = () => {
             <QuestionBox 
               meetingId={id} 
               onQuestionSubmitted={handleQuestionSubmitted}
+              participants={participants}
             />
           )}
           

@@ -10,15 +10,24 @@ import {
   Collapse,
   CircularProgress,
   useMediaQuery,
-  useTheme
+  useTheme,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Avatar,
+  Grid,
+  ButtonGroup
 } from '@mui/material';
 import {
   Send as SendIcon,
   ExpandMore as ExpandMoreIcon,
-  QuestionAnswer as QuestionIcon
+  QuestionAnswer as QuestionIcon,
+  Person as PersonIcon,
+  Group as GroupIcon
 } from '@mui/icons-material';
 
-const QuestionBox = ({ meetingId, onQuestionSubmitted }) => {
+const QuestionBox = ({ meetingId, onQuestionSubmitted, participants = [] }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
@@ -26,10 +35,18 @@ const QuestionBox = ({ meetingId, onQuestionSubmitted }) => {
   const [askerName, setAskerName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [questionScope, setQuestionScope] = useState('all');
+  const [targetDirector, setTargetDirector] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!question.trim()) return;
+    
+    // 验证定向提问必须选择董事
+    if (questionScope === 'specific' && !targetDirector) {
+      alert('请选择要提问的董事');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -41,7 +58,9 @@ const QuestionBox = ({ meetingId, onQuestionSubmitted }) => {
         body: JSON.stringify({
           question: question.trim(),
           asker_name: askerName.trim() || '用户',
-          question_type: 'general'
+          question_type: 'general',
+          question_scope: questionScope,
+          target_director_id: questionScope === 'specific' ? targetDirector : null
         }),
       });
 
@@ -50,6 +69,8 @@ const QuestionBox = ({ meetingId, onQuestionSubmitted }) => {
       if (result.success) {
         setQuestion('');
         setIsExpanded(false);
+        setQuestionScope('all');
+        setTargetDirector('');
         if (onQuestionSubmitted) {
           onQuestionSubmitted(result.data);
         }
@@ -111,6 +132,68 @@ const QuestionBox = ({ meetingId, onQuestionSubmitted }) => {
             disabled={isSubmitting}
             size={isMobile ? 'medium' : 'medium'}
           />
+          
+          {/* 提问类型选择 */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              提问方式：
+            </Typography>
+            <ButtonGroup 
+              variant="outlined" 
+              size={isMobile ? 'medium' : 'small'}
+              fullWidth={isMobile}
+              value={questionScope}
+              disabled={isSubmitting}
+            >
+              <Button
+                variant={questionScope === 'all' ? 'contained' : 'outlined'}
+                startIcon={<GroupIcon />}
+                onClick={() => setQuestionScope('all')}
+                sx={{ minHeight: isMobile ? 44 : 'auto' }}
+              >
+                向全体董事提问
+              </Button>
+              <Button
+                variant={questionScope === 'specific' ? 'contained' : 'outlined'}
+                startIcon={<PersonIcon />}
+                onClick={() => setQuestionScope('specific')}
+                sx={{ minHeight: isMobile ? 44 : 'auto' }}
+              >
+                向指定董事提问
+              </Button>
+            </ButtonGroup>
+          </Box>
+
+          {/* 指定董事选择器 */}
+          {questionScope === 'specific' && (
+            <Box sx={{ mb: 2 }}>
+              <FormControl fullWidth size={isMobile ? 'medium' : 'small'}>
+                <InputLabel>选择董事</InputLabel>
+                <Select
+                  value={targetDirector}
+                  onChange={(e) => setTargetDirector(e.target.value)}
+                  disabled={isSubmitting}
+                  label="选择董事"
+                >
+                  {participants.map((participant) => (
+                    <MenuItem key={participant.director_id} value={participant.director_id}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Avatar
+                          src={participant.director?.avatar_url}
+                          sx={{ width: 24, height: 24 }}
+                        >
+                          <PersonIcon sx={{ fontSize: 14 }} />
+                        </Avatar>
+                        <Typography>
+                          {participant.director?.name} - {participant.director?.title}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
           
           <Box 
             display="flex" 
