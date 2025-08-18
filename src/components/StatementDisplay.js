@@ -8,7 +8,9 @@ import {
   Chip,
   IconButton,
   Button,
-  Paper
+  Paper,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -32,6 +34,8 @@ const StatementDisplay = ({
   const director = statement.Director;
   const isUserQuestion = statement.content_type === 'user_question';
   const discussionMode = meeting?.discussion_mode || 'round_robin';
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // 检查是否是新轮次
   const isNewRound = index === 0 || statement.round_number !== statements[index - 1]?.round_number;
@@ -124,14 +128,14 @@ const StatementDisplay = ({
           transform: 'translateY(-1px)'
         }
       }}>
-        <CardContent sx={{ p: 3 }}>
+        <CardContent sx={{ p: isMobile ? 2 : 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <Avatar 
               src={isUserQuestion ? null : director?.avatar_url}
               sx={{ 
-                width: 40, 
-                height: 40, 
-                mr: 2,
+                width: isMobile ? 36 : 40, 
+                height: isMobile ? 36 : 40, 
+                mr: isMobile ? 1.5 : 2,
                 backgroundColor: getAvatarColor(),
                 border: '3px solid #fff',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
@@ -145,7 +149,7 @@ const StatementDisplay = ({
                 sx={{ 
                   fontWeight: 600,
                   color: isUserQuestion ? '#1565C0' : '#333',
-                  fontSize: '1.1rem'
+                  fontSize: isMobile ? '1rem' : '1.1rem'
                 }}
               >
                 {getSpeakerLabel()}
@@ -155,7 +159,7 @@ const StatementDisplay = ({
                 sx={{ 
                   color: '#666',
                   fontWeight: 500,
-                  fontSize: '0.9rem'
+                  fontSize: isMobile ? '0.85rem' : '0.9rem'
                 }}
               >
                 {isUserQuestion ? '会议参与者' : director?.title}
@@ -204,15 +208,21 @@ const StatementDisplay = ({
             )}
             
             {!isUserQuestion && (
-              <>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 0.5,
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'flex-end' : 'center'
+              }}>
                 <FavoriteButton
                   statementId={statement.id}
                   favoriteType="statement"
                 />
                 <IconButton
-                  size="small"
+                  size={isMobile ? 'medium' : 'small'}
                   onClick={() => onShareQuote(statement.id)}
                   title="生成金句卡片"
+                  sx={{ minHeight: isMobile ? 44 : 'auto' }}
                 >
                   <ShareIcon />
                 </IconButton>
@@ -220,17 +230,21 @@ const StatementDisplay = ({
                 {/* 辩论模式特有的反驳按钮 */}
                 {discussionMode === 'debate' && onRebuttal && (
                   <Button
-                    size="small"
+                    size={isMobile ? 'medium' : 'small'}
                     startIcon={<ReplyIcon />}
                     onClick={() => onRebuttal(statement)}
                     variant="outlined"
                     color={isProSide ? 'error' : 'success'}
-                    sx={{ ml: 1 }}
+                    sx={{ 
+                      ml: isMobile ? 0 : 1,
+                      mt: isMobile ? 0.5 : 0,
+                      minHeight: isMobile ? 44 : 'auto'
+                    }}
                   >
                     反驳
                   </Button>
                 )}
-              </>
+              </Box>
             )}
           </Box>
           
@@ -238,8 +252,8 @@ const StatementDisplay = ({
             variant="body1" 
             sx={{ 
               whiteSpace: 'pre-wrap',
-              fontSize: isUserQuestion ? '1rem' : '1.1rem',
-              lineHeight: 1.7,
+              fontSize: isMobile ? (isUserQuestion ? '0.95rem' : '1rem') : (isUserQuestion ? '1rem' : '1.1rem'),
+              lineHeight: isMobile ? 1.6 : 1.7,
               color: isUserQuestion ? '#1565C0' : '#333',
               fontWeight: isUserQuestion ? 500 : 400,
               letterSpacing: '0.02em',

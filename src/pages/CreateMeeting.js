@@ -18,7 +18,9 @@ import {
   Checkbox,
   FormControlLabel,
   Alert,
-  Divider
+  Divider,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -34,6 +36,8 @@ import { directorAPI, meetingAPI } from '../services/api';
 const CreateMeeting = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // 表单状态
   const [formData, setFormData] = useState({
@@ -176,26 +180,37 @@ const CreateMeeting = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: isMobile ? 2 : 4 }}>
       {/* 页面标题 */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'stretch' : 'center', 
+        gap: isMobile ? 2 : 0,
+        mb: isMobile ? 3 : 4 
+      }}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/hall')}
-          sx={{ mr: 2 }}
+          sx={{ 
+            mr: isMobile ? 0 : 2,
+            alignSelf: isMobile ? 'flex-start' : 'center',
+            width: isMobile ? 'fit-content' : 'auto'
+          }}
+          size={isMobile ? 'medium' : 'medium'}
         >
           返回
         </Button>
-        <Typography variant="h4" component="h1">
+        <Typography variant={isMobile ? "h5" : "h4"} component="h1">
           创建新会议
         </Typography>
       </Box>
 
       <form onSubmit={handleSubmit}>
-        <Grid container spacing={4}>
-          {/* 左侧：会议基本信息 */}
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3, mb: 3 }}>
+        <Grid container spacing={isMobile ? 2 : 4}>
+          {/* 会议基本信息 */}
+          <Grid item xs={12} md={6} order={isMobile ? 1 : 1}>
+            <Paper sx={{ p: isMobile ? 2 : 3, mb: isMobile ? 2 : 3 }}>
               <Typography variant="h6" gutterBottom>
                 会议信息
               </Typography>
@@ -208,6 +223,7 @@ const CreateMeeting = () => {
                 sx={{ mb: 2 }}
                 required
                 placeholder="例如：关于人工智能发展的董事会讨论"
+                size={isMobile ? 'medium' : 'medium'}
               />
               
               
@@ -215,17 +231,18 @@ const CreateMeeting = () => {
                 fullWidth
                 label="讨论话题 *"
                 multiline
-                rows={4}
+                rows={isMobile ? 5 : 4}
                 value={formData.topic}
                 onChange={(e) => handleInputChange('topic', e.target.value)}
                 required
                 placeholder="请描述你想讨论的问题..."
                 helperText="详细的话题描述将帮助董事们更好地进行讨论"
+                size={isMobile ? 'medium' : 'medium'}
               />
             </Paper>
 
             {/* 会议设置 */}
-            <Paper sx={{ p: 3 }}>
+            <Paper sx={{ p: isMobile ? 2 : 3 }}>
               <Typography variant="h6" gutterBottom>
                 会议设置
               </Typography>
@@ -238,6 +255,7 @@ const CreateMeeting = () => {
                       value={formData.discussion_mode}
                       label="讨论模式"
                       onChange={(e) => handleInputChange('discussion_mode', e.target.value)}
+                      size={isMobile ? 'medium' : 'medium'}
                     >
                       {Object.entries(discussionModes).map(([key, label]) => (
                         <MenuItem key={key} value={key}>{label}</MenuItem>
@@ -254,6 +272,7 @@ const CreateMeeting = () => {
                     value={formData.max_rounds}
                     onChange={(e) => handleInputChange('max_rounds', parseInt(e.target.value))}
                     inputProps={{ min: 1, max: 20 }}
+                    size={isMobile ? 'medium' : 'medium'}
                   />
                 </Grid>
                 
@@ -265,6 +284,7 @@ const CreateMeeting = () => {
                     value={formData.max_participants}
                     onChange={(e) => handleInputChange('max_participants', parseInt(e.target.value))}
                     inputProps={{ min: 1, max: 10 }}
+                    size={isMobile ? 'medium' : 'medium'}
                   />
                 </Grid>
               </Grid>
@@ -279,21 +299,30 @@ const CreateMeeting = () => {
             </Paper>
           </Grid>
 
-          {/* 右侧：董事选择 */}
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6">
+          {/* 董事选择 */}
+          <Grid item xs={12} md={6} order={isMobile ? 2 : 2}>
+            <Paper sx={{ p: isMobile ? 2 : 3 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                justifyContent: 'space-between', 
+                alignItems: isMobile ? 'stretch' : 'center', 
+                gap: isMobile ? 2 : 0,
+                mb: 3 
+              }}>
+                <Typography variant={isMobile ? "subtitle1" : "h6"}>
                   选择参与董事 ({selectedDirectors.length}/{formData.max_participants})
                 </Typography>
                 <Button
                   variant="outlined"
-                  size="small"
+                  size={isMobile ? "medium" : "small"}
                   onClick={() => {
                     setSelectedDirectors([]);
                     setFormData(prev => ({ ...prev, director_ids: [] }));
                   }}
                   disabled={selectedDirectors.length === 0}
+                  fullWidth={isMobile}
+                  sx={{ minHeight: isMobile ? 44 : 'auto' }}
                 >
                   清空选择
                 </Button>
@@ -308,7 +337,7 @@ const CreateMeeting = () => {
                   暂无活跃董事，请先创建并激活董事。
                 </Alert>
               ) : (
-                <Grid container spacing={2}>
+                <Grid container spacing={isMobile ? 1.5 : 2}>
                   {directors.map((director) => {
                     const isSelected = selectedDirectors.find(d => d.id === director.id);
                     
@@ -326,20 +355,27 @@ const CreateMeeting = () => {
                           }}
                           onClick={() => handleDirectorSelect(director)}
                         >
-                          <CardContent sx={{ p: 2 }}>
+                          <CardContent sx={{ p: isMobile ? 1.5 : 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                               <Checkbox
                                 checked={!!isSelected}
-                                sx={{ mr: 2 }}
+                                sx={{ 
+                                  mr: isMobile ? 1 : 2,
+                                  minHeight: isMobile ? 44 : 'auto'
+                                }}
                               />
                               <Avatar 
                                 src={director.avatar_url}
-                                sx={{ width: 40, height: 40, mr: 2 }}
+                                sx={{ 
+                                  width: isMobile ? 44 : 40, 
+                                  height: isMobile ? 44 : 40, 
+                                  mr: isMobile ? 1.5 : 2 
+                                }}
                               >
                                 <PersonIcon />
                               </Avatar>
                               <Box sx={{ flex: 1 }}>
-                                <Typography variant="subtitle1">
+                                <Typography variant={isMobile ? "body1" : "subtitle1"} sx={{ fontWeight: 600 }}>
                                   {director.name}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
@@ -353,7 +389,11 @@ const CreateMeeting = () => {
                                         label={area}
                                         size="small"
                                         variant="outlined"
-                                        sx={{ mr: 0.5, fontSize: '0.7rem' }}
+                                        sx={{ 
+                                          mr: 0.5, 
+                                          fontSize: isMobile ? '0.75rem' : '0.7rem',
+                                          height: isMobile ? 24 : 20
+                                        }}
                                       />
                                     ))}
                                   </Box>
@@ -400,10 +440,24 @@ const CreateMeeting = () => {
         </Grid>
 
         {/* 底部操作栏 */}
-        <Paper sx={{ p: 3, mt: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Paper sx={{ 
+          p: isMobile ? 2 : 3, 
+          mt: isMobile ? 3 : 4, 
+          display: 'flex', 
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between', 
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: isMobile ? 2 : 0
+        }}>
           <Button
             variant="outlined"
             onClick={() => navigate('/hall')}
+            size={isMobile ? 'large' : 'medium'}
+            fullWidth={isMobile}
+            sx={{ 
+              minHeight: isMobile ? 48 : 'auto',
+              order: isMobile ? 2 : 1
+            }}
           >
             取消
           </Button>
@@ -413,7 +467,12 @@ const CreateMeeting = () => {
             variant="contained"
             startIcon={<AddIcon />}
             disabled={createMutation.isLoading}
-            size="large"
+            size={isMobile ? 'large' : 'large'}
+            fullWidth={isMobile}
+            sx={{ 
+              minHeight: isMobile ? 48 : 'auto',
+              order: isMobile ? 1 : 2
+            }}
           >
             {createMutation.isLoading ? '创建中...' : '创建会议'}
           </Button>

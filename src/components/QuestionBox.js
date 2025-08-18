@@ -8,7 +8,9 @@ import {
   Chip,
   IconButton,
   Collapse,
-  CircularProgress
+  CircularProgress,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import {
   Send as SendIcon,
@@ -17,6 +19,9 @@ import {
 } from '@mui/icons-material';
 
 const QuestionBox = ({ meetingId, onQuestionSubmitted }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
   const [question, setQuestion] = useState('');
   const [askerName, setAskerName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,15 +78,16 @@ const QuestionBox = ({ meetingId, onQuestionSubmitted }) => {
   };
 
   return (
-    <Paper elevation={2} sx={{ p: 2, mb: 2, border: '2px dashed #e0e0e0' }}>
+    <Paper elevation={2} sx={{ p: isMobile ? 2 : 2, mb: 2, border: '2px dashed #e0e0e0' }}>
       <Box display="flex" alignItems="center" mb={1}>
-        <QuestionIcon color="primary" sx={{ mr: 1 }} />
-        <Typography variant="h6" component="h3">
+        <QuestionIcon color="primary" sx={{ mr: 1, fontSize: isMobile ? 20 : 24 }} />
+        <Typography variant={isMobile ? "subtitle1" : "h6"} component="h3" sx={{ fontSize: isMobile ? '1rem' : '1.25rem' }}>
           向董事们提问
         </Typography>
         <IconButton
           onClick={() => setIsExpanded(!isExpanded)}
-          sx={{ ml: 'auto' }}
+          sx={{ ml: 'auto', minHeight: isMobile ? 44 : 'auto' }}
+          size={isMobile ? 'medium' : 'small'}
         >
           <ExpandMoreIcon 
             sx={{ 
@@ -97,22 +103,29 @@ const QuestionBox = ({ meetingId, onQuestionSubmitted }) => {
           <TextField
             fullWidth
             multiline
-            rows={2}
+            rows={isMobile ? 3 : 2}
             placeholder="输入你想问董事们的问题..."
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             sx={{ mb: 2 }}
             disabled={isSubmitting}
+            size={isMobile ? 'medium' : 'medium'}
           />
           
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box 
+            display="flex" 
+            alignItems={isMobile ? "stretch" : "center"} 
+            gap={2}
+            flexDirection={isMobile ? "column" : "row"}
+          >
             <TextField
-              size="small"
+              size={isMobile ? "medium" : "small"}
               placeholder="你的称呼（可选）"
               value={askerName}
               onChange={(e) => setAskerName(e.target.value)}
-              sx={{ width: 150 }}
+              sx={{ width: isMobile ? '100%' : 150 }}
               disabled={isSubmitting}
+              fullWidth={isMobile}
             />
             
             <Button
@@ -120,7 +133,12 @@ const QuestionBox = ({ meetingId, onQuestionSubmitted }) => {
               variant="contained"
               startIcon={isSubmitting ? <CircularProgress size={16} /> : <SendIcon />}
               disabled={!question.trim() || isSubmitting}
-              sx={{ ml: 'auto' }}
+              sx={{ 
+                ml: isMobile ? 0 : 'auto',
+                minHeight: isMobile ? 48 : 'auto'
+              }}
+              size={isMobile ? 'large' : 'medium'}
+              fullWidth={isMobile}
             >
               {isSubmitting ? '提问中...' : '提问'}
             </Button>
@@ -134,7 +152,13 @@ const QuestionBox = ({ meetingId, onQuestionSubmitted }) => {
             label="点击展开提问框" 
             variant="outlined" 
             onClick={() => setIsExpanded(true)}
-            sx={{ cursor: 'pointer' }}
+            sx={{ 
+              cursor: 'pointer',
+              minHeight: isMobile ? 44 : 'auto',
+              fontSize: isMobile ? '0.95rem' : '0.875rem',
+              px: isMobile ? 2 : 1
+            }}
+            size={isMobile ? 'medium' : 'small'}
           />
         </Box>
       )}

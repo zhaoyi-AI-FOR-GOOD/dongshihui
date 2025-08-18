@@ -18,7 +18,11 @@ import {
   LinearProgress,
   Divider,
   Alert,
-  Fab
+  Fab,
+  useMediaQuery,
+  useTheme,
+  Collapse,
+  SwipeableDrawer
 } from '@mui/material';
 import {
   PlayArrow as PlayIcon,
@@ -32,7 +36,9 @@ import {
   Settings as SettingsIcon,
   Share as ShareIcon,
   Summarize as SummarizeIcon,
-  Download as DownloadIcon
+  Download as DownloadIcon,
+  Menu as MenuIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -54,6 +60,9 @@ const MeetingRoom = () => {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
@@ -63,6 +72,7 @@ const MeetingRoom = () => {
   const [showSummary, setShowSummary] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [rebuttalTarget, setRebuttalTarget] = useState(null);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   // 获取会议详情
   const { data: meetingResponse, isLoading, error, refetch } = useQuery(
@@ -282,15 +292,23 @@ const MeetingRoom = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 2 }}>
+    <Container maxWidth="lg" sx={{ py: isMobile ? 1 : 2 }}>
       {/* 会议头部信息 */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Paper sx={{ p: isMobile ? 2 : 3, mb: isMobile ? 2 : 3 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between', 
+          alignItems: isMobile ? 'stretch' : 'center', 
+          gap: isMobile ? 2 : 0,
+          mb: 2 
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Button
               startIcon={<ArrowBackIcon />}
               onClick={() => navigate('/hall')}
               sx={{ mr: 2 }}
+              size={isMobile ? 'medium' : 'medium'}
             >
               返回大厅
             </Button>
@@ -336,7 +354,12 @@ const MeetingRoom = () => {
           </Box>
           
           {/* 会议控制按钮 */}
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: isMobile ? 1 : 1,
+            flexWrap: isMobile ? 'wrap' : 'nowrap',
+            justifyContent: isMobile ? 'center' : 'flex-end'
+          }}>
             {meeting.status === 'preparing' && (
               <Button
                 variant="contained"
@@ -344,6 +367,8 @@ const MeetingRoom = () => {
                 onClick={() => startMutation.mutate()}
                 disabled={startMutation.isLoading}
                 color="success"
+                size={isMobile ? 'large' : 'medium'}
+                sx={{ minHeight: isMobile ? 48 : 'auto' }}
               >
                 开始会议
               </Button>
@@ -356,6 +381,8 @@ const MeetingRoom = () => {
                   startIcon={<PauseIcon />}
                   onClick={() => pauseMutation.mutate()}
                   disabled={pauseMutation.isLoading}
+                  size={isMobile ? 'large' : 'medium'}
+                  sx={{ minHeight: isMobile ? 48 : 'auto' }}
                 >
                   暂停
                 </Button>
@@ -365,6 +392,8 @@ const MeetingRoom = () => {
                   onClick={handleGenerateNext}
                   disabled={isGenerating}
                   color="primary"
+                  size={isMobile ? 'large' : 'medium'}
+                  sx={{ minHeight: isMobile ? 48 : 'auto' }}
                 >
                   {isGenerating ? '生成中...' : 
                    meeting.discussion_mode === 'debate' ? '继续辩论' :
@@ -381,12 +410,15 @@ const MeetingRoom = () => {
                 onClick={() => resumeMutation.mutate()}
                 disabled={resumeMutation.isLoading}
                 color="success"
+                size={isMobile ? 'large' : 'medium'}
+                sx={{ minHeight: isMobile ? 48 : 'auto' }}
               >
                 继续会议
               </Button>
             )}
             
-            {statements.length > 0 && (
+            {/* 手机端将次要按钮放到抽屉里 */}
+            {!isMobile && statements.length > 0 && (
               <>
                 <Button
                   variant="outlined"
@@ -407,12 +439,29 @@ const MeetingRoom = () => {
               </>
             )}
             
+            {/* 手机端的菜单按钮 */}
+            {isMobile && statements.length > 0 && (
+              <IconButton
+                onClick={() => setMobileDrawerOpen(true)}
+                size="large"
+                sx={{ 
+                  backgroundColor: 'primary.main',
+                  color: 'white',
+                  '&:hover': { backgroundColor: 'primary.dark' }
+                }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+            
             {!['finished'].includes(meeting.status) && (
               <Button
                 variant="outlined"
                 startIcon={<StopIcon />}
                 onClick={() => setShowFinishDialog(true)}
                 color="error"
+                size={isMobile ? 'large' : 'medium'}
+                sx={{ minHeight: isMobile ? 48 : 'auto' }}
               >
                 结束会议
               </Button>
@@ -452,17 +501,40 @@ const MeetingRoom = () => {
       </Paper>
 
       {/* 会议内容区域 */}
-      <Grid container spacing={3}>
-        {/* 左侧：发言记录 */}
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ height: '60vh', display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-              <Typography variant="h6">
+      <Grid container spacing={isMobile ? 2 : 3}>
+        {/* 发言记录区域 */}
+        <Grid item xs={12} md={8} order={isMobile ? 2 : 1}>
+          <Paper sx={{ 
+            height: isMobile ? '50vh' : '60vh', 
+            display: 'flex', 
+            flexDirection: 'column' 
+          }}>
+            <Box sx={{ 
+              p: isMobile ? 1.5 : 2, 
+              borderBottom: 1, 
+              borderColor: 'divider',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <Typography variant={isMobile ? 'subtitle1' : 'h6'}>
                 会议讨论记录
               </Typography>
+              {/* 手机端在这里显示会议进度 */}
+              {isMobile && (
+                <Chip 
+                  label={`${meeting.current_round}/${meeting.max_rounds}轮`}
+                  size="small"
+                  color="primary"
+                />
+              )}
             </Box>
             
-            <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+            <Box sx={{ 
+              flex: 1, 
+              overflow: 'auto', 
+              p: isMobile ? 1.5 : 2 
+            }}>
               {statements.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 6 }}>
                   <ForumIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
@@ -522,16 +594,37 @@ const MeetingRoom = () => {
           </Paper>
         </Grid>
 
-        {/* 右侧：会议信息和互动 */}
-        <Grid item xs={12} md={4}>
-          {/* 讨论模式显示 */}
-          <DiscussionModeDisplay
-            meeting={meeting}
-            participants={participants}
-            statements={statements}
-            currentSpeakerIndex={getCurrentSpeakerIndex()}
-            nextSpeakerIndex={getNextSpeakerIndex()}
-          />
+        {/* 会议信息和互动区域 */}
+        <Grid item xs={12} md={4} order={isMobile ? 1 : 2}>
+          {/* 讨论模式显示 - 手机端简化 */}
+          {!isMobile && (
+            <DiscussionModeDisplay
+              meeting={meeting}
+              participants={participants}
+              statements={statements}
+              currentSpeakerIndex={getCurrentSpeakerIndex()}
+              nextSpeakerIndex={getNextSpeakerIndex()}
+            />
+          )}
+          
+          {/* 手机端简化的模式显示 */}
+          {isMobile && (
+            <Paper sx={{ p: 2, mb: 2, backgroundColor: '#E3F2FD' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Typography variant="subtitle2" color="primary" fontWeight="bold">
+                  {meeting.discussion_mode === 'round_robin' ? '轮流发言模式' :
+                   meeting.discussion_mode === 'debate' ? '辩论模式' :
+                   meeting.discussion_mode === 'focus' ? '聚焦讨论模式' :
+                   meeting.discussion_mode === 'free' ? '自由发言模式' : '讨论模式'}
+                </Typography>
+                <Chip 
+                  label={`${statements.length}发言`} 
+                  size="small" 
+                  color="primary"
+                />
+              </Box>
+            </Paper>
+          )}
           
           {/* 用户提问区域 */}
           {['discussing', 'debating', 'paused'].includes(meeting.status) && (
@@ -541,51 +634,59 @@ const MeetingRoom = () => {
             />
           )}
           
-          {/* 问题和回应列表 */}
+          {/* 问题和回应列表 - 手机端简化 */}
           {questions.length > 0 && (
-            <Paper sx={{ p: 2, mb: 3, maxHeight: '40vh', overflow: 'auto' }}>
+            <Paper sx={{ 
+              p: isMobile ? 1.5 : 2, 
+              mb: isMobile ? 2 : 3, 
+              maxHeight: isMobile ? '30vh' : '40vh', 
+              overflow: 'auto' 
+            }}>
               <QuestionResponseList questions={questions} />
             </Paper>
           )}
 
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              会议统计
-            </Typography>
-            <Box sx={{ space: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">进行轮数</Typography>
-                <Typography variant="body2" fontWeight="bold">
-                  {meeting.current_round}/{meeting.max_rounds}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">总发言数</Typography>
-                <Typography variant="body2" fontWeight="bold">
-                  {statements.length}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">参与人数</Typography>
-                <Typography variant="body2" fontWeight="bold">
-                  {participants.length}
-                </Typography>
-              </Box>
-              {meeting.started_at && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2">开始时间</Typography>
+          {/* 会议统计 - 电脑端显示详细，手机端简化 */}
+          {!isMobile && (
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                会议统计
+              </Typography>
+              <Box sx={{ space: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2">进行轮数</Typography>
                   <Typography variant="body2" fontWeight="bold">
-                    {format(new Date(meeting.started_at), 'HH:mm', { locale: zhCN })}
+                    {meeting.current_round}/{meeting.max_rounds}
                   </Typography>
                 </Box>
-              )}
-            </Box>
-          </Paper>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2">总发言数</Typography>
+                  <Typography variant="body2" fontWeight="bold">
+                    {statements.length}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2">参与人数</Typography>
+                  <Typography variant="body2" fontWeight="bold">
+                    {participants.length}
+                  </Typography>
+                </Box>
+                {meeting.started_at && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2">开始时间</Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      {format(new Date(meeting.started_at), 'HH:mm', { locale: zhCN })}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </Paper>
+          )}
 
           {/* 生成进度 */}
           {isGenerating && (
-            <Paper sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
+            <Paper sx={{ p: isMobile ? 2 : 3, mb: isMobile ? 2 : 3 }}>
+              <Typography variant={isMobile ? 'subtitle1' : 'h6'} gutterBottom>
                 AI 生成中...
               </Typography>
               <LinearProgress sx={{ mb: 2 }} />
@@ -597,7 +698,7 @@ const MeetingRoom = () => {
 
           {/* 提示信息 */}
           {meeting.status === 'discussing' && !isGenerating && (
-            <Alert severity="info">
+            <Alert severity="info" sx={{ fontSize: isMobile ? '0.9rem' : '1rem' }}>
               {meeting.discussion_mode === 'round_robin' && `下一位发言：${participants[getNextSpeakerIndex()]?.director?.name || '等待确定'}`}
               {meeting.discussion_mode === 'debate' && '点击"继续辩论"让对方进行反驳'}
               {meeting.discussion_mode === 'focus' && '点击"深入讨论"进入下一层分析'}
@@ -659,6 +760,98 @@ const MeetingRoom = () => {
           onClose={() => setShowExport(false)}
         />
       )}
+
+      {/* 手机端抽屉式菜单 */}
+      <SwipeableDrawer
+        anchor="bottom"
+        open={mobileDrawerOpen}
+        onClose={() => setMobileDrawerOpen(false)}
+        onOpen={() => setMobileDrawerOpen(true)}
+        disableSwipeToOpen={false}
+      >
+        <Box sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h6">会议操作</Typography>
+            <IconButton onClick={() => setMobileDrawerOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<SummarizeIcon />}
+                onClick={() => {
+                  setShowSummary(true);
+                  setMobileDrawerOpen(false);
+                }}
+                color="info"
+                size="large"
+                sx={{ minHeight: 56 }}
+              >
+                生成摘要
+              </Button>
+            </Grid>
+            <Grid item xs={6}>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<DownloadIcon />}
+                onClick={() => {
+                  setShowExport(true);
+                  setMobileDrawerOpen(false);
+                }}
+                color="secondary"
+                size="large"
+                sx={{ minHeight: 56 }}
+              >
+                导出全文
+              </Button>
+            </Grid>
+          </Grid>
+          
+          {/* 会议统计 - 手机端在抽屉里显示 */}
+          <Paper sx={{ p: 2, mt: 3, backgroundColor: '#F5F5F5' }}>
+            <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+              会议统计
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={4}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" color="primary">
+                    {meeting.current_round}
+                  </Typography>
+                  <Typography variant="caption">
+                    当前轮次
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={4}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" color="primary">
+                    {statements.length}
+                  </Typography>
+                  <Typography variant="caption">
+                    总发言数
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={4}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" color="primary">
+                    {participants.length}
+                  </Typography>
+                  <Typography variant="caption">
+                    参与董事
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Box>
+      </SwipeableDrawer>
     </Container>
   );
 };

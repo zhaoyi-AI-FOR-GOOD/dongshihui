@@ -26,7 +26,9 @@ import {
   DialogActions,
   Menu,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import { 
   History as HistoryIcon,
@@ -50,6 +52,8 @@ import toast from 'react-hot-toast';
 const MeetingHistory = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // 筛选状态
   const [filters, setFilters] = useState({
@@ -166,11 +170,18 @@ const MeetingHistory = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: isMobile ? 2 : 4 }}>
       {/* 页面标题 */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between', 
+        alignItems: isMobile ? 'stretch' : 'center', 
+        gap: isMobile ? 2 : 0,
+        mb: isMobile ? 3 : 4 
+      }}>
         <Box>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+          <Typography variant={isMobile ? "h5" : "h4"} gutterBottom sx={{ fontWeight: 600 }}>
             会议历史
           </Typography>
           <Typography variant="body1" color="text.secondary">
@@ -181,14 +192,20 @@ const MeetingHistory = () => {
           variant="contained" 
           startIcon={<AddIcon />}
           onClick={() => navigate('/meetings/create')}
-          sx={{ borderRadius: 2 }}
+          sx={{ 
+            borderRadius: 2,
+            minHeight: isMobile ? 48 : 'auto',
+            fontSize: isMobile ? '1rem' : '0.875rem'
+          }}
+          size={isMobile ? 'large' : 'medium'}
+          fullWidth={isMobile}
         >
           创建新会议
         </Button>
       </Box>
 
       {/* 筛选和搜索 */}
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper sx={{ p: isMobile ? 2 : 3, mb: isMobile ? 2 : 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
             <TextField
@@ -196,6 +213,7 @@ const MeetingHistory = () => {
               placeholder="搜索会议标题或话题..."
               value={filters.search}
               onChange={(e) => handleSearch(e.target.value)}
+              size={isMobile ? 'medium' : 'medium'}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -212,6 +230,7 @@ const MeetingHistory = () => {
                 value={filters.status}
                 label="会议状态"
                 onChange={(e) => handleFilterChange('status', e.target.value)}
+                size={isMobile ? 'medium' : 'medium'}
               >
                 {statusOptions.map(option => (
                   <MenuItem key={option.value} value={option.value}>
@@ -222,7 +241,12 @@ const MeetingHistory = () => {
             </FormControl>
           </Grid>
           <Grid item xs={12} md={5}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2,
+              justifyContent: isMobile ? 'center' : 'flex-start'
+            }}>
               <Typography variant="body2" color="text.secondary">
                 共 {pagination.total || 0} 场会议
               </Typography>
@@ -247,12 +271,12 @@ const MeetingHistory = () => {
         </Paper>
       ) : (
         <>
-          <Grid container spacing={3}>
+          <Grid container spacing={isMobile ? 2 : 3}>
             {meetings.map((meeting) => {
               const statusInfo = getStatusInfo(meeting.status);
               
               return (
-                <Grid item xs={12} md={6} lg={4} key={meeting.id}>
+                <Grid item xs={12} sm={6} lg={4} key={meeting.id}>
                   <Card sx={{ 
                     height: '100%',
                     transition: 'all 0.2s ease',
@@ -261,7 +285,7 @@ const MeetingHistory = () => {
                       transform: 'translateY(-2px)'
                     }
                   }}>
-                    <CardContent sx={{ p: 3 }}>
+                    <CardContent sx={{ p: isMobile ? 2.5 : 3 }}>
                       {/* 会议头部 */}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                         <Typography 
@@ -269,7 +293,7 @@ const MeetingHistory = () => {
                           sx={{ 
                             fontWeight: 600,
                             color: '#333',
-                            fontSize: '1.1rem',
+                            fontSize: isMobile ? '1rem' : '1.1rem',
                             lineHeight: 1.3,
                             flex: 1,
                             mr: 1
@@ -326,23 +350,34 @@ const MeetingHistory = () => {
                       </Box>
 
                       {/* 操作按钮 */}
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        gap: 1, 
+                        justifyContent: 'flex-end',
+                        flexDirection: isMobile ? 'column' : 'row'
+                      }}>
                         <Button
-                          size="small"
+                          size={isMobile ? 'medium' : 'small'}
                           startIcon={<ViewIcon />}
                           onClick={() => navigate(`/meeting/${meeting.id}`)}
                           variant="outlined"
+                          fullWidth={isMobile}
+                          sx={{ minHeight: isMobile ? 44 : 'auto' }}
                         >
                           {meeting.status === 'finished' ? '查看记录' : '进入会议'}
                         </Button>
                         
                         <IconButton
-                          size="small"
+                          size={isMobile ? 'medium' : 'small'}
                           onClick={(event) => setActionMenu({ 
                             anchorEl: event.currentTarget, 
                             meeting 
                           })}
                           title="更多操作"
+                          sx={{ 
+                            minHeight: isMobile ? 44 : 'auto',
+                            alignSelf: isMobile ? 'flex-end' : 'center'
+                          }}
                         >
                           <MoreVertIcon />
                         </IconButton>
