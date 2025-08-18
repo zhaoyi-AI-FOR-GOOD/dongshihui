@@ -19,7 +19,14 @@ import {
   MenuItem,
   Pagination,
   Divider,
-  AvatarGroup
+  AvatarGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Menu,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
 import { 
   History as HistoryIcon,
@@ -30,16 +37,19 @@ import {
   PlayArrow as PlayIcon,
   Visibility as ViewIcon,
   Add as AddIcon,
-  FilterList as FilterIcon
+  FilterList as FilterIcon,
+  Delete as DeleteIcon,
+  MoreVert as MoreVertIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 
 const MeetingHistory = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   // 筛选状态
   const [filters, setFilters] = useState({
@@ -47,6 +57,10 @@ const MeetingHistory = () => {
     search: '',
     page: 1
   });
+  
+  // 删除相关状态
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, meeting: null });
+  const [actionMenu, setActionMenu] = useState({ anchorEl: null, meeting: null });
 
   // 获取会议列表
   const { data: meetingsResponse, isLoading } = useQuery(
@@ -77,6 +91,30 @@ const MeetingHistory = () => {
 
   const meetings = meetingsResponse?.data || [];
   const pagination = meetingsResponse?.pagination || {};
+
+  // 删除会议
+  const deleteMutation = useMutation(
+    async (meetingId) => {
+      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${meetingId}`, {
+        method: 'DELETE'
+      });
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || '删除失败');
+      }
+      return result;
+    },
+    {
+      onSuccess: () => {
+        toast.success('会议删除成功');
+        queryClient.invalidateQueries('meetings');
+        setDeleteDialog({ open: false, meeting: null });
+      },
+      onError: (err) => {
+        toast.error('删除失败: ' + err.message);
+      }
+    }
+  );
 
   // 状态选项
   const statusOptions = [
@@ -297,6 +335,17 @@ const MeetingHistory = () => {
                         >
                           {meeting.status === 'finished' ? '查看记录' : '进入会议'}
                         </Button>
+                        
+                        <IconButton
+                          size="small"
+                          onClick={(event) => setActionMenu({ 
+                            anchorEl: event.currentTarget, 
+                            meeting 
+                          })}
+                          title="更多操作"
+                        >
+                          <MoreVertIcon />
+                        </IconButton>
                       </Box>
                     </CardContent>
                   </Card>
@@ -319,6 +368,69 @@ const MeetingHistory = () => {
           )}
         </>
       )}
+
+      {/* 操作菜单 */}
+      <Menu
+        anchorEl={actionMenu.anchorEl}
+        open={Boolean(actionMenu.anchorEl)}
+        onClose={() => setActionMenu({ anchorEl: null, meeting: null })}
+      >
+        <MenuItem onClick={() => {
+          navigate(`/meeting/${actionMenu.meeting.id}`);
+          setActionMenu({ anchorEl: null, meeting: null });
+        }}>
+          <ListItemIcon>
+            <ViewIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>
+            {actionMenu.meeting?.status === 'finished' ? '查看记录' : '进入会议'}
+          </ListItemText>
+        </MenuItem>
+        
+        <MenuItem 
+          onClick={() => {
+            setDeleteDialog({ open: true, meeting: actionMenu.meeting });
+            setActionMenu({ anchorEl: null, meeting: null });
+          }}
+          sx={{ color: 'error.main' }}
+        >
+          <ListItemIcon>
+            <DeleteIcon fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText>
+            删除会议
+          </ListItemText>
+        </MenuItem>
+      </Menu>
+
+      {/* 删除确认对话框 */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, meeting: null })}
+      >
+        <DialogTitle>确认删除会议</DialogTitle>
+        <DialogContent>
+          <Typography>
+            确定要删除会议 <strong>"{deleteDialog.meeting?.title}"</strong> 吗？
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            此操作将永久删除该会议的所有记录，包括发言内容、用户提问等，且无法恢复。
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ open: false, meeting: null })}>
+            取消
+          </Button>
+          <Button 
+            color="error" 
+            variant="contained"
+            onClick={() => deleteMutation.mutate(deleteDialog.meeting.id)}
+            disabled={deleteMutation.isLoading}
+          >
+            {deleteMutation.isLoading ? '删除中...' : '确认删除'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
