@@ -110,140 +110,110 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
     
     setIsGeneratingImage(true);
     try {
-      // 使用Canvas直接绘制摘要，避免字体渲染问题
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      // 创建纯净的HTML结构用于会议摘要
+      const imageContainer = document.createElement('div');
+      imageContainer.style.cssText = `
+        width: 600px;
+        min-height: 800px;
+        padding: 0;
+        background: #ffffff;
+        position: relative;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        color: #333;
+        box-sizing: border-box;
+      `;
       
-      // 设置高清画布
-      const scale = 2;
-      const width = 600;
-      const height = Math.max(800, 200 + summary.key_points.length * 30 + summary.participant_highlights.length * 40 + 300);
-      canvas.width = width * scale;
-      canvas.height = height * scale;
-      canvas.style.width = width + 'px';
-      canvas.style.height = height + 'px';
-      ctx.scale(scale, scale);
+      // 创建摘要HTML内容
+      imageContainer.innerHTML = `
+        <div style="background: #1976d2; color: white; padding: 20px 0; text-align: center;">
+          <div style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">会议AI摘要</div>
+          <div style="font-size: 16px;">${meetingTitle.replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\s]/g, '')}</div>
+        </div>
+        
+        <div style="text-align: center; padding: 12px 0; font-size: 12px; color: #999;">
+          生成时间：${format(new Date(), 'yyyy年MM月dd日 HH:mm', { locale: zhCN })}
+        </div>
+        
+        <div style="margin: 20px 30px; padding: 20px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <div style="font-size: 16px; font-weight: bold; color: #1976d2; margin-bottom: 12px;">■ 执行摘要</div>
+          <div style="font-size: 14px; line-height: 1.5; color: #333;">
+            ${summary.executive_summary.replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\u3000-\u303f\uff00-\uffef\s.,!?;:()"""''，。！？；：（）]/g, '').substring(0, 200)}...
+          </div>
+        </div>
+        
+        <div style="margin: 20px 30px;">
+          <div style="font-size: 16px; font-weight: bold; color: #1976d2; margin-bottom: 12px;">• 关键要点</div>
+          ${summary.key_points.slice(0, 5).map((point, index) => 
+            `<div style="font-size: 14px; margin-bottom: 8px; color: #333;">
+              ${index + 1}. ${point.replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\u3000-\u303f\uff00-\uffef\s.,!?;:()"""''，。！？；：（）]/g, '').substring(0, 80)}
+            </div>`
+          ).join('')}
+        </div>
+        
+        <div style="margin: 20px 30px;">
+          <div style="font-size: 16px; font-weight: bold; color: #1976d2; margin-bottom: 12px;">◆ 董事亮点</div>
+          ${summary.participant_highlights.slice(0, 4).map((highlight) => 
+            `<div style="margin-bottom: 12px;">
+              <div style="font-size: 14px; font-weight: bold; color: #1976d2; margin-bottom: 4px;">
+                > ${highlight.director.replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a]/g, '')}:
+              </div>
+              <div style="font-size: 14px; color: #333; margin-left: 16px;">
+                ${highlight.key_contribution.replace(/[^\u4e00-\u9fff\u0030-\u0039\u0041-\u005a\u0061-\u007a\u3000-\u303f\uff00-\uffef\s.,!?;:()"""''，。！？；：（）]/g, '').substring(0, 100)}
+              </div>
+            </div>`
+          ).join('')}
+        </div>
+        
+        <div style="border-top: 2px solid #e0e0e0; margin: 30px 30px 0 30px; padding-top: 20px; text-align: center;">
+          <div style="font-size: 18px; font-weight: bold; color: #1976d2; margin-bottom: 8px;">
+            私人董事会
+          </div>
+          <div style="font-size: 14px; color: #666; margin-bottom: 4px;">
+            dongshihui.xyz 与历史人物共商大事
+          </div>
+          <div style="font-size: 12px; color: #999;">
+            本摘要由Claude Sonnet 4 AI自动生成
+          </div>
+        </div>
+      `;
       
-      // 设置背景
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, width, height);
+      // 临时添加到DOM中
+      imageContainer.style.position = 'fixed';
+      imageContainer.style.top = '-9999px';
+      imageContainer.style.left = '-9999px';
+      document.body.appendChild(imageContainer);
       
-      // 定义安全的主题颜色
-      const safeColor = '#1976d2';
-      
-      let yPos = 30;
-      
-      // 绘制标题区域
-      ctx.fillStyle = safeColor;
-      ctx.fillRect(0, yPos, width, 60);
-      
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 24px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('会议AI摘要', width / 2, yPos + 20);
-      
-      ctx.font = '16px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillText(meetingTitle, width / 2, yPos + 45);
-      
-      yPos += 80;
-      
-      // 生成时间
-      ctx.font = '12px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillStyle = '#999999';
-      ctx.textAlign = 'center';
-      const timeStr = format(new Date(), 'yyyy年MM月dd日 HH:mm', { locale: zhCN });
-      ctx.fillText(`生成时间：${timeStr}`, width / 2, yPos);
-      
-      yPos += 40;
-      
-      // 执行摘要区域
-      ctx.fillStyle = '#f8f9fa';
-      ctx.strokeStyle = '#e0e0e0';
-      ctx.lineWidth = 1;
-      const summaryBoxHeight = 80;
-      ctx.fillRect(30, yPos, width - 60, summaryBoxHeight);
-      ctx.strokeRect(30, yPos, width - 60, summaryBoxHeight);
-      
-      ctx.fillStyle = safeColor;
-      ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText('■ 执行摘要', 45, yPos + 20);
-      
-      // 绘制执行摘要文本（多行处理）
-      ctx.fillStyle = '#333333';
-      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
-      const summaryLines = wrapText(ctx, summary.executive_summary, width - 100);
-      summaryLines.forEach((line, index) => {
-        if (index < 2) { // 最多显示2行
-          ctx.fillText(line, 45, yPos + 40 + index * 18);
+      // 使用html2canvas转换，添加CSS清理
+      const canvas = await html2canvas(imageContainer, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        foreignObjectRendering: false,
+        removeContainer: true,
+        imageTimeout: 0,
+        logging: false,
+        width: 600,
+        height: Math.max(800, imageContainer.offsetHeight),
+        onclone: function(clonedDoc) {
+          // 移除所有可能导致异常字符的CSS伪元素
+          const style = clonedDoc.createElement('style');
+          style.textContent = `
+            *::before, *::after {
+              content: none !important;
+              display: none !important;
+            }
+            * {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
         }
       });
       
-      yPos += summaryBoxHeight + 30;
-      
-      // 关键要点
-      ctx.fillStyle = safeColor;
-      ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillText('• 关键要点', 30, yPos);
-      
-      yPos += 25;
-      ctx.fillStyle = '#333333';
-      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
-      summary.key_points.slice(0, 5).forEach((point, index) => {
-        const pointText = `${index + 1}. ${point}`;
-        const pointLines = wrapText(ctx, pointText, width - 80);
-        pointLines.forEach((line, lineIndex) => {
-          ctx.fillText(line, lineIndex === 0 ? 45 : 60, yPos + lineIndex * 18);
-        });
-        yPos += Math.max(18, pointLines.length * 18);
-      });
-      
-      yPos += 20;
-      
-      // 董事亮点
-      ctx.fillStyle = safeColor;
-      ctx.font = 'bold 16px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillText('◆ 董事亮点', 30, yPos);
-      
-      yPos += 25;
-      ctx.fillStyle = '#333333';
-      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
-      summary.participant_highlights.slice(0, 4).forEach((highlight) => {
-        ctx.fillStyle = safeColor;
-        ctx.fillText(`> ${highlight.director}:`, 45, yPos);
-        ctx.fillStyle = '#333333';
-        const contributionLines = wrapText(ctx, highlight.key_contribution, width - 140);
-        contributionLines.forEach((line, lineIndex) => {
-          ctx.fillText(line, 120, yPos + lineIndex * 18);
-        });
-        yPos += Math.max(20, contributionLines.length * 18);
-      });
-      
-      yPos += 30;
-      
-      // 分隔线
-      ctx.strokeStyle = '#e0e0e0';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(30, yPos);
-      ctx.lineTo(width - 30, yPos);
-      ctx.stroke();
-      
-      yPos += 30;
-      
-      // 品牌信息
-      ctx.fillStyle = safeColor;
-      ctx.font = 'bold 18px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('私人董事会', width / 2, yPos);
-      
-      ctx.font = '14px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillStyle = '#666666';
-      ctx.fillText('dongshihui.xyz 与历史人物共商大事', width / 2, yPos + 25);
-      
-      ctx.font = '12px PingFang SC, Microsoft YaHei, sans-serif';
-      ctx.fillStyle = '#999999';
-      ctx.fillText('本摘要由Claude Sonnet 4 AI自动生成', width / 2, yPos + 45);
+      // 清理DOM
+      document.body.removeChild(imageContainer);
       
       return canvas;
     } catch (error) {
@@ -253,33 +223,6 @@ ${summary.participant_highlights.map(h => `• ${h.director}：${h.key_contribut
     } finally {
       setIsGeneratingImage(false);
     }
-  };
-
-  // 文本换行处理函数 - 改进中文处理
-  const wrapText = (context, text, maxWidth) => {
-    // 清理文本，移除可能的控制字符
-    const cleanText = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-    const chars = Array.from(cleanText); // 使用Array.from正确处理Unicode字符
-    const lines = [];
-    let currentLine = '';
-
-    for (let i = 0; i < chars.length; i++) {
-      const char = chars[i];
-      const testLine = currentLine + char;
-      const metrics = context.measureText(testLine);
-      const testWidth = metrics.width;
-      
-      if (testWidth > maxWidth && currentLine !== '') {
-        lines.push(currentLine);
-        currentLine = char;
-      } else {
-        currentLine = testLine;
-      }
-    }
-    if (currentLine) {
-      lines.push(currentLine);
-    }
-    return lines;
   };
 
   const handleDownloadSummaryImage = async () => {

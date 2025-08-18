@@ -216,7 +216,7 @@ const QuoteCard = ({ statementId, onClose }) => {
       imageContainer.style.left = '-9999px';
       document.body.appendChild(imageContainer);
       
-      // 使用html2canvas转换
+      // 使用html2canvas转换，添加CSS清理
       const canvas = await html2canvas(imageContainer, {
         backgroundColor: '#ffffff',
         scale: 2,
@@ -227,7 +227,21 @@ const QuoteCard = ({ statementId, onClose }) => {
         imageTimeout: 0,
         logging: false,
         width: 480,
-        height: Math.max(600, imageContainer.offsetHeight)
+        height: Math.max(600, imageContainer.offsetHeight),
+        onclone: function(clonedDoc) {
+          // 移除所有可能导致异常字符的CSS伪元素
+          const style = clonedDoc.createElement('style');
+          style.textContent = `
+            *::before, *::after {
+              content: none !important;
+              display: none !important;
+            }
+            * {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+        }
       });
       
       // 清理DOM
