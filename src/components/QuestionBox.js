@@ -81,7 +81,7 @@ const QuestionBox = ({ meetingId, onQuestionSubmitted, participants = [] }) => {
             if (questionScope === 'all') {
               // 全员提问：依次生成所有董事的发言
               for (let i = 0; i < participants.length; i++) {
-                const generateRes = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${meetingId}/generate`, {
+                const generateRes = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${meetingId}/next-statement`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ const QuestionBox = ({ meetingId, onQuestionSubmitted, participants = [] }) => {
               }
             } else {
               // 定向提问：生成一次发言
-              const generateRes = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${meetingId}/generate`, {
+              const generateRes = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${meetingId}/next-statement`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
