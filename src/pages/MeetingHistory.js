@@ -77,7 +77,7 @@ const MeetingHistory = () => {
         ...(filters.search && { search: filters.search })
       });
       
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings?${params}`);
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings?${params}`);
       const result = await response.json();
       
       if (!result.success) {
@@ -99,7 +99,7 @@ const MeetingHistory = () => {
   // 删除会议
   const deleteMutation = useMutation(
     async (meetingId) => {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${meetingId}`, {
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings/${meetingId}`, {
         method: 'DELETE'
       });
       const result = await response.json();

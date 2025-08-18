@@ -222,7 +222,7 @@ const MeetingRoom = () => {
   const fetchQuestions = async () => {
     if (!id) return;
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${id}/questions`);
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings/${id}/questions`);
       const result = await response.json();
       if (result.success) {
         setQuestions(result.data);

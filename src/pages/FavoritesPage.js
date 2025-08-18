@@ -57,7 +57,7 @@ const FavoritesPage = () => {
 
   const fetchFavorites = async () => {
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/favorites?user_id=default_user`);
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/favorites?user_id=default_user`);
       const result = await response.json();
       
       if (result.success) {
@@ -75,7 +75,7 @@ const FavoritesPage = () => {
 
   const fetchTags = async () => {
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/favorites/tags?user_id=default_user`);
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/favorites/tags?user_id=default_user`);
       const result = await response.json();
       
       if (result.success) {
@@ -117,7 +117,7 @@ const FavoritesPage = () => {
 
   const handleRemoveFavorite = async (favoriteId) => {
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/favorites/${favoriteId}?user_id=default_user`, {
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/favorites/${favoriteId}?user_id=default_user`, {
         method: 'DELETE'
       });
 

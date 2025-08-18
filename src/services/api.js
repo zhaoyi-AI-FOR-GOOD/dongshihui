@@ -6,8 +6,8 @@ const getBaseURL = () => {
     // 生产环境使用Workers API
     return process.env.REACT_APP_API_URL || 'https://dongshihui-api.jieshu2023.workers.dev';
   } else {
-    // 开发环境使用本地后端
-    return 'http://localhost:3001/api/v1';
+    // 开发环境也使用Workers API（本地服务器已停止）
+    return process.env.REACT_APP_API_URL || 'https://dongshihui-api.jieshu2023.workers.dev';
   }
 };
 

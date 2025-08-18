@@ -33,7 +33,7 @@ const QuoteCard = ({ statementId, onClose }) => {
 
   const fetchCardData = async () => {
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/statements/${statementId}/card`);
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/statements/${statementId}/card`);
       const result = await response.json();
       
       if (result.success) {

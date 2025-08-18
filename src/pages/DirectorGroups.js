@@ -61,7 +61,7 @@ const DirectorGroups = () => {
 
   const fetchGroups = async () => {
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/director-groups?user_id=default_user`);
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/director-groups?user_id=default_user`);
       const result = await response.json();
       
       if (result.success) {
@@ -77,7 +77,7 @@ const DirectorGroups = () => {
 
   const fetchDirectors = async () => {
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/directors`);
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/directors`);
       const result = await response.json();
       
       if (result.success) {
@@ -95,7 +95,7 @@ const DirectorGroups = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/director-groups`, {
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/director-groups`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +128,7 @@ const DirectorGroups = () => {
     if (!window.confirm('确定要删除这个董事组合吗？')) return;
 
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/director-groups/${groupId}?user_id=default_user`, {
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/director-groups/${groupId}?user_id=default_user`, {
         method: 'DELETE'
       });
 
@@ -153,7 +153,7 @@ const DirectorGroups = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/from-group/${selectedGroup.id}`, {
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings/from-group/${selectedGroup.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

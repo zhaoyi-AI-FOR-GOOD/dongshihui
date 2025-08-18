@@ -41,7 +41,7 @@ const MeetingSummary = ({ meetingId, meetingTitle, onClose }) => {
   const handleGenerateSummary = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${meetingId}/summary`, {
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings/${meetingId}/summary`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

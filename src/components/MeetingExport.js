@@ -49,7 +49,7 @@ const MeetingExport = ({ meetingId, meetingTitle, statementCount, onClose }) => 
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/meetings/${meetingId}/export`, {
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings/${meetingId}/export`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

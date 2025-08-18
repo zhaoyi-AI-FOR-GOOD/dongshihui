@@ -70,7 +70,7 @@ const CreateMeeting = () => {
   const { data: groupsResponse, isLoading: groupsLoading } = useQuery(
     'directorGroups',
     async () => {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/director-groups?user_id=default_user`);
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/director-groups?user_id=default_user`);
       return response.json();
     },
     {
@@ -134,7 +134,7 @@ const CreateMeeting = () => {
   // 处理选择董事组合
   const handleSelectGroup = async (group) => {
     try {
-      const response = await fetch(`${process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://dongshihui-api.jieshu2023.workers.dev'}/director-groups/${group.id}`);
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/director-groups/${group.id}`);
       const result = await response.json();
       
       if (result.success) {
