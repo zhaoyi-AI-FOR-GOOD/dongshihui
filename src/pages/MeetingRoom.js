@@ -38,7 +38,9 @@ import {
   Summarize as SummarizeIcon,
   Download as DownloadIcon,
   Menu as MenuIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  VerticalAlignBottom as ScrollDownIcon,
+  VerticalAlignTop as ScrollUpIcon
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -73,6 +75,8 @@ const MeetingRoom = () => {
   const [showExport, setShowExport] = useState(false);
   const [rebuttalTarget, setRebuttalTarget] = useState(null);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [previousStatementsCount, setPreviousStatementsCount] = useState(0);
 
   // 获取会议详情
   const { data: meetingResponse, isLoading, error, refetch } = useQuery(
@@ -165,7 +169,7 @@ const MeetingRoom = () => {
     {
       onSuccess: (response) => {
         const directorName = response.data?.data?.director?.name;
-        toast.success(`${directorName} 的发言已生成`);
+        toast.success(`${directorName} 的发言已生成${!autoScroll ? '，滚动查看最新内容' : ''}`);
         refetch();
         setIsGenerating(false);
       },
@@ -246,10 +250,26 @@ const MeetingRoom = () => {
     return (current + 1) % participants.length;
   };
 
-  // 自动滚动到底部
+  // 智能滚动控制
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [statements]);
+    // 检测是否有新发言
+    const currentCount = statements.length;
+    const hasNewStatement = currentCount > previousStatementsCount;
+    
+    if (hasNewStatement) {
+      // 检查用户是否在页面底部附近（距离底部300px内）
+      const isNearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
+      
+      // 只有在用户接近底部或明确开启自动滚动时才滚动
+      if (autoScroll || isNearBottom) {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+      
+      setPreviousStatementsCount(currentCount);
+    }
+  }, [statements, autoScroll, previousStatementsCount]);
 
   // 获取状态显示
   const getStatusInfo = (status) => {
@@ -354,12 +374,15 @@ const MeetingRoom = () => {
           </Box>
           
           {/* 会议控制按钮 */}
-          <Box sx={{ 
-            display: 'flex', 
-            gap: isMobile ? 1 : 1,
-            flexWrap: isMobile ? 'wrap' : 'nowrap',
-            justifyContent: isMobile ? 'center' : 'flex-end'
-          }}>
+          <Box 
+            data-meeting-controls
+            sx={{ 
+              display: 'flex', 
+              gap: isMobile ? 1 : 1,
+              flexWrap: isMobile ? 'wrap' : 'nowrap',
+              justifyContent: isMobile ? 'center' : 'flex-end'
+            }}
+          >
             {meeting.status === 'preparing' && (
               <Button
                 variant="contained"
@@ -520,14 +543,39 @@ const MeetingRoom = () => {
               <Typography variant={isMobile ? 'subtitle1' : 'h6'}>
                 会议讨论记录
               </Typography>
-              {/* 手机端在这里显示会议进度 */}
-              {isMobile && (
-                <Chip 
-                  label={`${meeting.current_round}/${meeting.max_rounds}轮`}
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {/* 滚动控制按钮 */}
+                <IconButton
                   size="small"
-                  color="primary"
-                />
-              )}
+                  onClick={() => setAutoScroll(!autoScroll)}
+                  title={autoScroll ? "关闭自动滚动" : "开启自动滚动"}
+                  sx={{ 
+                    color: autoScroll ? 'primary.main' : 'text.secondary',
+                    backgroundColor: autoScroll ? 'primary.light' : 'transparent'
+                  }}
+                >
+                  <ScrollDownIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+                
+                {/* 手动滚到底部按钮 */}
+                <IconButton
+                  size="small"
+                  onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  title="滚动到最新发言"
+                >
+                  <ScrollUpIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+                
+                {/* 手机端在这里显示会议进度 */}
+                {isMobile && (
+                  <Chip 
+                    label={`${meeting.current_round}/${meeting.max_rounds}轮`}
+                    size="small"
+                    color="primary"
+                  />
+                )}
+              </Box>
             </Box>
             
             <Box sx={{ 
@@ -852,6 +900,28 @@ const MeetingRoom = () => {
           </Paper>
         </Box>
       </SwipeableDrawer>
+
+      {/* 浮动的快速操作按钮 */}
+      {statements.length > 3 && (
+        <Fab
+          color="primary"
+          size="medium"
+          onClick={() => {
+            const controlsElement = document.querySelector('[data-meeting-controls]');
+            controlsElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
+          sx={{
+            position: 'fixed',
+            bottom: isMobile ? 80 : 24,
+            right: 24,
+            zIndex: 1000,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+          }}
+          title="回到控制区域"
+        >
+          <ScrollUpIcon />
+        </Fab>
+      )}
     </Container>
   );
 };
