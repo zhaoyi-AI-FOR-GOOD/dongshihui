@@ -518,25 +518,7 @@ const QuoteCard = ({ statementId, onClose }) => {
                   lineHeight: 1.4,
                   color: cardData.analysis.theme_color,
                   fontWeight: 500,
-                  position: 'relative',
-                  '&::before': {
-                    content: '"',
-                    fontSize: '3em',
-                    position: 'absolute',
-                    left: -20,
-                    top: -20,
-                    opacity: 0.3,
-                    color: cardData.analysis.theme_color
-                  },
-                  '&::after': {
-                    content: '"',
-                    fontSize: '3em',
-                    position: 'absolute',
-                    right: -20,
-                    bottom: -30,
-                    opacity: 0.3,
-                    color: cardData.analysis.theme_color
-                  }
+                  position: 'relative'
                 }}
               >
                 {cardData.analysis.highlight_quote || cardData.content}
