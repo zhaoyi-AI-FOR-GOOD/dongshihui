@@ -42,11 +42,58 @@ const QuoteCard = ({ statementId, onClose }) => {
       if (result.success) {
         setCardData(result.data);
       } else {
-        toast.error('获取卡片数据失败');
+        console.error('卡片API返回错误:', result.error);
+        // 如果API失败，创建一个默认的cardData以便测试长图功能
+        setCardData({
+          id: statementId,
+          content: "这是一个测试金句，用于演示长图分享功能。",
+          director: {
+            name: "测试董事",
+            title: "AI测试专家",
+            avatar_url: null,
+            era: "2024年"
+          },
+          meeting: {
+            title: "测试会议",
+            topic: "测试长图分享功能"
+          },
+          analysis: {
+            keywords: ["测试", "长图", "分享"],
+            theme_color: "#1976d2",
+            category: "测试",
+            highlight_quote: "这是一个测试金句"
+          },
+          created_at: new Date().toISOString(),
+          round_number: 1
+        });
+        toast.error('获取卡片数据失败，使用测试数据');
       }
     } catch (error) {
       console.error('获取卡片数据失败:', error);
-      toast.error('获取卡片数据失败');
+      // 网络错误时也使用测试数据
+      setCardData({
+        id: statementId,
+        content: "网络连接失败，这是测试数据用于演示长图分享功能。",
+        director: {
+          name: "测试董事", 
+          title: "系统测试员",
+          avatar_url: null,
+          era: "现代"
+        },
+        meeting: {
+          title: "测试会议",
+          topic: "网络错误处理测试"
+        },
+        analysis: {
+          keywords: ["网络", "错误", "测试"],
+          theme_color: "#f44336", 
+          category: "错误",
+          highlight_quote: "网络连接失败时的处理"
+        },
+        created_at: new Date().toISOString(),
+        round_number: 1
+      });
+      toast.error('网络连接失败，使用测试数据');
     } finally {
       setIsLoading(false);
     }
