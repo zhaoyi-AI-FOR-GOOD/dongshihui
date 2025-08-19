@@ -71,11 +71,7 @@ const MeetingHistory = () => {
         ...(filters.search && { search: filters.search })
       });
       
-      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings?${params}`, {
-        headers: {
-          'Cache-Control': 'public, max-age=300', // 5分钟缓存
-        }
-      });
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings?${params}`);
       const result = await response.json();
       
       if (!result.success) {
