@@ -1,48 +1,42 @@
-import React, { useState } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Paper, 
-  Box, 
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  Avatar,
-  Chip,
-  IconButton,
-  TextField,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Pagination,
-  Divider,
-  AvatarGroup,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Menu,
-  ListItemIcon,
-  ListItemText,
-  useMediaQuery,
-  useTheme
-} from '@mui/material';
-import { 
-  History as HistoryIcon,
-  Search as SearchIcon,
-  AccessTime as TimeIcon,
-  Forum as ForumIcon,
-  Person as PersonIcon,
-  PlayArrow as PlayIcon,
-  Visibility as ViewIcon,
-  Add as AddIcon,
-  FilterList as FilterIcon,
-  Delete as DeleteIcon,
-  MoreVert as MoreVertIcon
-} from '@mui/icons-material';
+import React, { useState, useMemo, useCallback } from 'react';
+// 按需导入减少bundle大小
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Pagination from '@mui/material/Pagination';
+import Divider from '@mui/material/Divider';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Menu from '@mui/material/Menu';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import useTheme from '@mui/material/styles/useTheme';
+
+import HistoryIcon from '@mui/icons-material/History';
+import SearchIcon from '@mui/icons-material/Search';
+import TimeIcon from '@mui/icons-material/AccessTime';
+import ForumIcon from '@mui/icons-material/Forum';
+import PersonIcon from '@mui/icons-material/Person';
+import ViewIcon from '@mui/icons-material/Visibility';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { format } from 'date-fns';
@@ -66,7 +60,7 @@ const MeetingHistory = () => {
   const [deleteDialog, setDeleteDialog] = useState({ open: false, meeting: null });
   const [actionMenu, setActionMenu] = useState({ anchorEl: null, meeting: null });
 
-  // 获取会议列表
+  // 获取会议列表 - 优化缓存和性能
   const { data: meetingsResponse, isLoading } = useQuery(
     ['meetings', filters],
     async () => {
@@ -77,7 +71,11 @@ const MeetingHistory = () => {
         ...(filters.search && { search: filters.search })
       });
       
-      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings?${params}`);
+      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings?${params}`, {
+        headers: {
+          'Cache-Control': 'public, max-age=300', // 5分钟缓存
+        }
+      });
       const result = await response.json();
       
       if (!result.success) {
@@ -87,6 +85,9 @@ const MeetingHistory = () => {
       return result;
     },
     {
+      staleTime: 2 * 60 * 1000, // 2分钟内不重新获取
+      cacheTime: 10 * 60 * 1000, // 10分钟缓存
+      keepPreviousData: true, // 保持之前数据，减少加载闪烁
       onError: (err) => {
         toast.error('获取会议列表失败: ' + err.message);
       }
@@ -120,51 +121,174 @@ const MeetingHistory = () => {
     }
   );
 
-  // 状态选项
-  const statusOptions = [
+  // 状态选项 - memoized避免重复创建
+  const statusOptions = useMemo(() => [
     { value: 'all', label: '全部会议' },
     { value: 'preparing', label: '准备中' },
     { value: 'discussing', label: '讨论中' },
     { value: 'paused', label: '已暂停' },
     { value: 'finished', label: '已结束' }
-  ];
+  ], []);
 
-  // 获取状态信息
-  const getStatusInfo = (status) => {
-    const statusMap = {
-      'preparing': { label: '准备中', color: 'default' },
-      'discussing': { label: '讨论中', color: 'success' },
-      'debating': { label: '辩论中', color: 'warning' },
-      'paused': { label: '已暂停', color: 'info' },
-      'finished': { label: '已结束', color: 'error' }
-    };
+  // 获取状态信息 - memoized避免重复计算
+  const statusMap = useMemo(() => ({
+    'preparing': { label: '准备中', color: 'default' },
+    'discussing': { label: '讨论中', color: 'success' },
+    'debating': { label: '辩论中', color: 'warning' },
+    'paused': { label: '已暂停', color: 'info' },
+    'finished': { label: '已结束', color: 'error' }
+  }), []);
+
+  const getStatusInfo = useCallback((status) => {
     return statusMap[status] || { label: status, color: 'default' };
-  };
+  }, [statusMap]);
 
-  // 处理筛选变化
-  const handleFilterChange = (field, value) => {
+  // 处理筛选变化 - useCallback避免子组件重渲染
+  const handleFilterChange = useCallback((field, value) => {
     setFilters(prev => ({
       ...prev,
       [field]: value,
       page: 1 // 重置到第一页
     }));
-  };
+  }, []);
 
-  // 处理搜索
-  const handleSearch = (value) => {
+  // 处理搜索 - useCallback + 防抖优化
+  const handleSearch = useCallback((value) => {
     setFilters(prev => ({
       ...prev,
       search: value,
       page: 1
     }));
-  };
+  }, []);
 
-  if (isLoading) {
+  // 处理菜单操作 - useCallback优化
+  const handleMenuOpen = useCallback((event, meeting) => {
+    setActionMenu({ anchorEl: event.currentTarget, meeting });
+  }, []);
+
+  const handleMenuClose = useCallback(() => {
+    setActionMenu({ anchorEl: null, meeting: null });
+  }, []);
+
+  // 骨架屏组件
+  const MeetingSkeleton = () => (
+    <Grid container spacing={isMobile ? 2 : 3}>
+      {[...Array(6)].map((_, index) => (
+        <Grid item xs={12} sm={6} lg={4} key={index}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent sx={{ p: isMobile ? 2.5 : 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ 
+                  width: '60%', 
+                  height: 24, 
+                  bgcolor: 'grey.200', 
+                  borderRadius: 1,
+                  animation: 'pulse 1.5s ease-in-out infinite'
+                }} />
+                <Box sx={{ 
+                  width: 60, 
+                  height: 24, 
+                  bgcolor: 'grey.200', 
+                  borderRadius: 12,
+                  animation: 'pulse 1.5s ease-in-out infinite'
+                }} />
+              </Box>
+              <Box sx={{ 
+                width: '80%', 
+                height: 16, 
+                bgcolor: 'grey.200', 
+                borderRadius: 1, 
+                mb: 1,
+                animation: 'pulse 1.5s ease-in-out infinite'
+              }} />
+              <Box sx={{ 
+                width: '60%', 
+                height: 16, 
+                bgcolor: 'grey.200', 
+                borderRadius: 1, 
+                mb: 2,
+                animation: 'pulse 1.5s ease-in-out infinite'
+              }} />
+              <Divider sx={{ my: 2 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                {[...Array(3)].map((_, i) => (
+                  <Box key={i} sx={{ 
+                    width: 60, 
+                    height: 16, 
+                    bgcolor: 'grey.200', 
+                    borderRadius: 1,
+                    animation: 'pulse 1.5s ease-in-out infinite'
+                  }} />
+                ))}
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                <Box sx={{ 
+                  width: 80, 
+                  height: 36, 
+                  bgcolor: 'grey.200', 
+                  borderRadius: 1,
+                  animation: 'pulse 1.5s ease-in-out infinite'
+                }} />
+                <Box sx={{ 
+                  width: 36, 
+                  height: 36, 
+                  bgcolor: 'grey.200', 
+                  borderRadius: 1,
+                  animation: 'pulse 1.5s ease-in-out infinite'
+                }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      ))}
+    </Grid>
+  );
+
+  if (isLoading && !meetingsResponse) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h6">加载会议历史中...</Typography>
+      <Container maxWidth="lg" sx={{ py: isMobile ? 2 : 4 }}>
+        {/* 页面标题骨架 */}
+        <Box sx={{ mb: isMobile ? 3 : 4 }}>
+          <Box sx={{ 
+            width: 200, 
+            height: 32, 
+            bgcolor: 'grey.200', 
+            borderRadius: 1, 
+            mb: 1,
+            animation: 'pulse 1.5s ease-in-out infinite'
+          }} />
+          <Box sx={{ 
+            width: 300, 
+            height: 20, 
+            bgcolor: 'grey.200', 
+            borderRadius: 1,
+            animation: 'pulse 1.5s ease-in-out infinite'
+          }} />
+        </Box>
+        
+        {/* 搜索栏骨架 */}
+        <Paper sx={{ p: isMobile ? 2 : 3, mb: isMobile ? 2 : 3 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <Box sx={{ 
+                height: 56, 
+                bgcolor: 'grey.200', 
+                borderRadius: 1,
+                animation: 'pulse 1.5s ease-in-out infinite'
+              }} />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Box sx={{ 
+                height: 56, 
+                bgcolor: 'grey.200', 
+                borderRadius: 1,
+                animation: 'pulse 1.5s ease-in-out infinite'
+              }} />
+            </Grid>
+          </Grid>
         </Paper>
+        
+        <MeetingSkeleton />
       </Container>
     );
   }
@@ -369,10 +493,7 @@ const MeetingHistory = () => {
                         
                         <IconButton
                           size={isMobile ? 'medium' : 'small'}
-                          onClick={(event) => setActionMenu({ 
-                            anchorEl: event.currentTarget, 
-                            meeting 
-                          })}
+                          onClick={(event) => handleMenuOpen(event, meeting)}
                           title="更多操作"
                           sx={{ 
                             minHeight: isMobile ? 44 : 'auto',
@@ -408,11 +529,11 @@ const MeetingHistory = () => {
       <Menu
         anchorEl={actionMenu.anchorEl}
         open={Boolean(actionMenu.anchorEl)}
-        onClose={() => setActionMenu({ anchorEl: null, meeting: null })}
+        onClose={handleMenuClose}
       >
         <MenuItem onClick={() => {
           navigate(`/meeting/${actionMenu.meeting.id}`);
-          setActionMenu({ anchorEl: null, meeting: null });
+          handleMenuClose();
         }}>
           <ListItemIcon>
             <ViewIcon fontSize="small" />
@@ -425,7 +546,7 @@ const MeetingHistory = () => {
         <MenuItem 
           onClick={() => {
             setDeleteDialog({ open: true, meeting: actionMenu.meeting });
-            setActionMenu({ anchorEl: null, meeting: null });
+            handleMenuClose();
           }}
           sx={{ color: 'error.main' }}
         >
