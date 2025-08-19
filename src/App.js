@@ -6,30 +6,46 @@ import Navbar from './components/Navbar';
 // 首页直接导入，提高FCP；其他页面懒加载
 import BoardHall from './pages/BoardHall';
 
-// 懒加载非首页组件，减少初始bundle大小 - 优化分块策略
+// 懒加载非首页组件 - 添加延迟减少移动端CPU负担
 const DirectorManager = React.lazy(() => 
-  import(/* webpackChunkName: "directors" */ './pages/DirectorManager')
+  new Promise(resolve => {
+    setTimeout(() => resolve(import(/* webpackChunkName: "directors" */ './pages/DirectorManager')), 100);
+  })
 );
 const CreateDirector = React.lazy(() => 
-  import(/* webpackChunkName: "directors" */ './pages/CreateDirector')
+  new Promise(resolve => {
+    setTimeout(() => resolve(import(/* webpackChunkName: "directors" */ './pages/CreateDirector')), 100);
+  })
 );
 const DirectorDetails = React.lazy(() => 
-  import(/* webpackChunkName: "directors" */ './pages/DirectorDetails')
+  new Promise(resolve => {
+    setTimeout(() => resolve(import(/* webpackChunkName: "directors" */ './pages/DirectorDetails')), 100);
+  })
 );
 const MeetingRoom = React.lazy(() => 
-  import(/* webpackChunkName: "meetings" */ './pages/MeetingRoom')
+  new Promise(resolve => {
+    setTimeout(() => resolve(import(/* webpackChunkName: "meetings" */ './pages/MeetingRoom')), 100);
+  })
 );
 const MeetingHistory = React.lazy(() => 
-  import(/* webpackChunkName: "meetings" */ './pages/MeetingHistory')
+  new Promise(resolve => {
+    setTimeout(() => resolve(import(/* webpackChunkName: "meetings" */ './pages/MeetingHistory')), 100);
+  })
 );
 const CreateMeeting = React.lazy(() => 
-  import(/* webpackChunkName: "meetings" */ './pages/CreateMeeting')
+  new Promise(resolve => {
+    setTimeout(() => resolve(import(/* webpackChunkName: "meetings" */ './pages/CreateMeeting')), 100);
+  })
 );
 const FavoritesPage = React.lazy(() => 
-  import(/* webpackChunkName: "favorites" */ './pages/FavoritesPage')
+  new Promise(resolve => {
+    setTimeout(() => resolve(import(/* webpackChunkName: "favorites" */ './pages/FavoritesPage')), 100);
+  })
 );
 const DirectorGroups = React.lazy(() => 
-  import(/* webpackChunkName: "groups" */ './pages/DirectorGroups')
+  new Promise(resolve => {
+    setTimeout(() => resolve(import(/* webpackChunkName: "groups" */ './pages/DirectorGroups')), 100);
+  })
 );
 
 // 加载中组件

@@ -20,19 +20,19 @@ const queryClient = new QueryClient({
   queryCache,
   defaultOptions: {
     queries: {
-      retry: 0, // 减少重试次数，快速失败
-      staleTime: 2 * 60 * 1000, // 2分钟缓存，减少请求频率
-      cacheTime: 5 * 60 * 1000, // 5分钟内存缓存，减少内存占用
+      retry: 1, // 适度重试，避免网络错误处理开销
+      staleTime: 5 * 60 * 1000, // 5分钟缓存，减少请求频率
+      cacheTime: 10 * 60 * 1000, // 10分钟内存缓存
       refetchOnWindowFocus: false, // 减少不必要的重新获取
-      refetchOnReconnect: false, // 减少重连时的请求
+      refetchOnReconnect: true, // 移动网络重连时适度刷新
       refetchInterval: false, // 关闭轮询
       suspense: false,
       networkMode: 'online',
-      // 快速失败策略
-      retryDelay: () => 500,
+      // 延长重试间隔，减少频繁失败的CPU开销
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
     },
     mutations: {
-      retry: 0, // 快速失败
+      retry: 1, // 适度重试
       networkMode: 'online',
     },
   },

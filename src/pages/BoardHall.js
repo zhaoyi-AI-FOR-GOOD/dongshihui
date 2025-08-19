@@ -30,7 +30,7 @@ import { zhCN } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { directorAPI } from '../services/api';
 
-const BoardHall = () => {
+const BoardHall = React.memo(() => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -407,6 +407,6 @@ const BoardHall = () => {
       </Paper>
     </Container>
   );
-};
+});
 
 export default BoardHall;

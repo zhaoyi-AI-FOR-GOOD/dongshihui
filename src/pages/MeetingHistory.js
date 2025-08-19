@@ -44,7 +44,7 @@ import { zhCN } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { meetingAPI } from '../services/api';
 
-const MeetingHistory = () => {
+const MeetingHistory = React.memo(() => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const theme = useTheme();
@@ -575,6 +575,6 @@ const MeetingHistory = () => {
       </Dialog>
     </Container>
   );
-};
+});
 
 export default MeetingHistory;

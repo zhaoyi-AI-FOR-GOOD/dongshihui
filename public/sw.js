@@ -30,90 +30,39 @@ self.addEventListener('install', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // 跳过非GET请求和chrome-extension等协议
-  if (event.request.method !== 'GET' || !url.protocol.startsWith('http')) {
+  // 只处理GET请求和我们关心的资源
+  if (event.request.method !== 'GET') {
     return;
   }
   
-  // API请求缓存策略
-  if (url.origin === API_BASE_URL) {
+  // 简化API缓存 - 只缓存核心列表API
+  if (url.origin === API_BASE_URL && 
+      (url.pathname.includes('/directors/active') || url.pathname.includes('/meetings'))) {
     event.respondWith(
-      (async () => {
-        const cache = await caches.open(API_CACHE_NAME);
-        const cachedResponse = await cache.match(event.request);
-        
-        // 对于列表API使用stale-while-revalidate
-        if (url.pathname.includes('/directors') || url.pathname.includes('/meetings')) {
+      caches.open(API_CACHE_NAME).then(cache => {
+        return cache.match(event.request).then(cachedResponse => {
           if (cachedResponse) {
-            // 非阻塞后台更新
-            event.waitUntil(
-              fetch(event.request).then(response => {
-                if (response.ok) {
-                  cache.put(event.request, response.clone());
-                }
-              }).catch(() => {}) // 忽略后台更新错误
-            );
             return cachedResponse;
           }
-        }
-        
-        // 网络优先，快速失败
-        try {
-          // 创建一个清理过的请求，移除可能导致CORS问题的头部
-          const cleanRequest = new Request(event.request.url, {
-            method: event.request.method,
-            headers: new Headers({
-              'Content-Type': 'application/json'
-            }),
-            body: event.request.body,
-            mode: 'cors',
-            credentials: 'same-origin'
-          });
           
-          const response = await Promise.race([
-            fetch(cleanRequest),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Timeout')), 8000)
-            )
-          ]);
-          
-          if (response.ok) {
-            cache.put(event.request, response.clone());
-          }
-          return response;
-        } catch (error) {
-          return cachedResponse || new Response('{"success":false,"error":"Network error"}', {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
+          // 简单的网络请求
+          return fetch(event.request).then(response => {
+            if (response.ok) {
+              cache.put(event.request, response.clone());
+            }
+            return response;
           });
-        }
-      })()
+        });
+      })
     );
     return;
   }
   
-  // 静态资源缓存优先策略 - 优化匹配逻辑
-  const isStaticResource = STATIC_RESOURCE_PATTERNS.some(pattern => 
-    pattern.test(url.pathname)
-  );
-  
-  if (isStaticResource || url.pathname === '/' || url.pathname.endsWith('.html')) {
+  // 静态资源简单缓存
+  if (url.pathname.includes('/static/')) {
     event.respondWith(
       caches.match(event.request).then(response => {
-        if (response) {
-          return response;
-        }
-        
-        return fetch(event.request).then(fetchResponse => {
-          if (fetchResponse.ok && isStaticResource) {
-            // 只缓存静态资源和成功响应
-            const responseToCache = fetchResponse.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return fetchResponse;
-        });
+        return response || fetch(event.request);
       })
     );
   }
