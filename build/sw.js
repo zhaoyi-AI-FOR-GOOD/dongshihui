@@ -1,6 +1,6 @@
 // Service Worker for performance optimization - 极致缓存策略
-const CACHE_NAME = 'dongshihui-v2';
-const API_CACHE_NAME = 'dongshihui-api-v2';
+const CACHE_NAME = 'dongshihui-v3';
+const API_CACHE_NAME = 'dongshihui-api-v3';
 
 // 缓存静态资源 - 动态处理构建文件
 const STATIC_CACHE_URLS = [
@@ -59,8 +59,19 @@ self.addEventListener('fetch', (event) => {
         
         // 网络优先，快速失败
         try {
+          // 创建一个清理过的请求，移除可能导致CORS问题的头部
+          const cleanRequest = new Request(event.request.url, {
+            method: event.request.method,
+            headers: new Headers({
+              'Content-Type': 'application/json'
+            }),
+            body: event.request.body,
+            mode: 'cors',
+            credentials: 'same-origin'
+          });
+          
           const response = await Promise.race([
-            fetch(event.request),
+            fetch(cleanRequest),
             new Promise((_, reject) => 
               setTimeout(() => reject(new Error('Timeout')), 8000)
             )
