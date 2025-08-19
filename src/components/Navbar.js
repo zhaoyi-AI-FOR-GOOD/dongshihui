@@ -87,10 +87,12 @@ const Navbar = () => {
               startIcon={item.icon}
               onClick={() => navigate(item.path)}
               sx={{
-                color: isActive(item.path) ? 'primary.main' : 'inherit',
-                backgroundColor: isActive(item.path) ? 'rgba(25, 118, 210, 0.1)' : 'transparent',
+                color: isActive(item.path) ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
+                backgroundColor: isActive(item.path) ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                fontWeight: isActive(item.path) ? 'bold' : 'normal',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  color: '#ffffff',
                 },
               }}
             >
