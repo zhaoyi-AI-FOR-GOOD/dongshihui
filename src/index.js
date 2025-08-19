@@ -3,13 +3,21 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider, QueryCache } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
 import { boardTheme } from './theme/boardTheme';
 
 // 创建React Query客户端，极致优化性能配置
+const queryCache = new QueryCache({
+  onError: (error) => {
+    // 静默处理错误，减少不必要的处理
+    console.warn('Query error:', error);
+  },
+});
+
 const queryClient = new QueryClient({
+  queryCache,
   defaultOptions: {
     queries: {
       retry: 0, // 减少重试次数，快速失败
@@ -22,19 +30,10 @@ const queryClient = new QueryClient({
       networkMode: 'online',
       // 快速失败策略
       retryDelay: () => 500,
-      // 使用更短的查询超时
-      queryFn: undefined,
     },
     mutations: {
       retry: 0, // 快速失败
       networkMode: 'online',
-    },
-  },
-  // 限制查询缓存大小，减少内存使用
-  queryCache: {
-    onError: (error) => {
-      // 静默处理错误，减少不必要的处理
-      console.warn('Query error:', error);
     },
   },
 });
