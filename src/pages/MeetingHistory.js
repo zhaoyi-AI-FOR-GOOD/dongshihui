@@ -42,6 +42,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import { meetingAPI } from '../services/api';
 
 const MeetingHistory = () => {
   const navigate = useNavigate();
@@ -64,21 +65,15 @@ const MeetingHistory = () => {
   const { data: meetingsResponse, isLoading } = useQuery(
     ['meetings', filters],
     async () => {
-      const params = new URLSearchParams({
-        limit: '12',
-        offset: ((filters.page - 1) * 12).toString(),
+      const params = {
+        limit: 12,
+        offset: (filters.page - 1) * 12,
         ...(filters.status !== 'all' && { status: filters.status }),
         ...(filters.search && { search: filters.search })
-      });
+      };
       
-      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings?${params}`);
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.error || '获取会议列表失败');
-      }
-      
-      return result;
+      const response = await meetingAPI.getAll(params);
+      return response.data;
     },
     {
       staleTime: 2 * 60 * 1000, // 2分钟内不重新获取
@@ -96,14 +91,9 @@ const MeetingHistory = () => {
   // 删除会议
   const deleteMutation = useMutation(
     async (meetingId) => {
-      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings/${meetingId}`, {
-        method: 'DELETE'
-      });
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.error || '删除失败');
-      }
-      return result;
+      // meetingAPI中没有delete方法，我们需要创建一个
+      const response = await meetingAPI.delete(meetingId);
+      return response.data;
     },
     {
       onSuccess: () => {

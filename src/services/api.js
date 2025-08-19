@@ -177,6 +177,11 @@ export const meetingAPI = {
   // 添加参与者
   addParticipants: (id, data) => {
     return api.post(`/meetings/${id}/participants`, data);
+  },
+
+  // 删除会议
+  delete: (id) => {
+    return api.delete(`/meetings/${id}`);
   }
 };
 
