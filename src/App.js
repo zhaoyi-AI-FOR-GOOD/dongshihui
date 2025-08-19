@@ -3,8 +3,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import Navbar from './components/Navbar';
 
-// 懒加载页面组件，减少初始bundle大小
-const BoardHall = React.lazy(() => import('./pages/BoardHall'));
+// 首页直接导入，提高FCP；其他页面懒加载
+import BoardHall from './pages/BoardHall';
+
+// 懒加载非首页组件，减少初始bundle大小
 const DirectorManager = React.lazy(() => import('./pages/DirectorManager'));
 const CreateDirector = React.lazy(() => import('./pages/CreateDirector'));
 const DirectorDetails = React.lazy(() => import('./pages/DirectorDetails'));
@@ -44,35 +46,69 @@ function App() {
       <Navbar />
       
       <Box component="main" sx={{ flex: 1, pt: 2 }}>
-        <Suspense fallback={<LoadingComponent />}>
-          <Routes>
-            {/* 默认重定向到董事会大厅 */}
-            <Route path="/" element={<Navigate to="/hall" replace />} />
-            
-            {/* 董事会大厅 - 主页 */}
-            <Route path="/hall" element={<BoardHall />} />
-            
-            {/* 董事管理 */}
-            <Route path="/directors" element={<DirectorManager />} />
-            <Route path="/directors/create" element={<CreateDirector />} />
-            <Route path="/directors/edit/:id" element={<CreateDirector />} />
-            <Route path="/directors/details/:id" element={<DirectorDetails />} />
-            
-            {/* 会议系统 */}
-            <Route path="/meetings/create" element={<CreateMeeting />} />
-            <Route path="/meeting/:id" element={<MeetingRoom />} />
-            <Route path="/meetings" element={<MeetingHistory />} />
-            
-            {/* 收藏系统 */}
-            <Route path="/favorites" element={<FavoritesPage />} />
-            
-            {/* 董事组合 */}
-            <Route path="/director-groups" element={<DirectorGroups />} />
-            
-            {/* 404页面 */}
-            <Route path="*" element={<Navigate to="/hall" replace />} />
-          </Routes>
-        </Suspense>
+        <Routes>
+          {/* 默认重定向到董事会大厅 */}
+          <Route path="/" element={<Navigate to="/hall" replace />} />
+          
+          {/* 董事会大厅 - 主页(直接渲染，提高FCP) */}
+          <Route path="/hall" element={<BoardHall />} />
+          
+          {/* 其他页面使用懒加载 */}
+          <Route path="/directors" element={
+            <Suspense fallback={<LoadingComponent />}>
+              <DirectorManager />
+            </Suspense>
+          } />
+          <Route path="/directors/create" element={
+            <Suspense fallback={<LoadingComponent />}>
+              <CreateDirector />
+            </Suspense>
+          } />
+          <Route path="/directors/edit/:id" element={
+            <Suspense fallback={<LoadingComponent />}>
+              <CreateDirector />
+            </Suspense>
+          } />
+          <Route path="/directors/details/:id" element={
+            <Suspense fallback={<LoadingComponent />}>
+              <DirectorDetails />
+            </Suspense>
+          } />
+          
+          {/* 会议系统 */}
+          <Route path="/meetings/create" element={
+            <Suspense fallback={<LoadingComponent />}>
+              <CreateMeeting />
+            </Suspense>
+          } />
+          <Route path="/meeting/:id" element={
+            <Suspense fallback={<LoadingComponent />}>
+              <MeetingRoom />
+            </Suspense>
+          } />
+          <Route path="/meetings" element={
+            <Suspense fallback={<LoadingComponent />}>
+              <MeetingHistory />
+            </Suspense>
+          } />
+          
+          {/* 收藏系统 */}
+          <Route path="/favorites" element={
+            <Suspense fallback={<LoadingComponent />}>
+              <FavoritesPage />
+            </Suspense>
+          } />
+          
+          {/* 董事组合 */}
+          <Route path="/director-groups" element={
+            <Suspense fallback={<LoadingComponent />}>
+              <DirectorGroups />
+            </Suspense>
+          } />
+          
+          {/* 404页面 */}
+          <Route path="*" element={<Navigate to="/hall" replace />} />
+        </Routes>
       </Box>
     </Box>
   );
