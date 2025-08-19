@@ -6,15 +6,31 @@ import Navbar from './components/Navbar';
 // 首页直接导入，提高FCP；其他页面懒加载
 import BoardHall from './pages/BoardHall';
 
-// 懒加载非首页组件，减少初始bundle大小
-const DirectorManager = React.lazy(() => import('./pages/DirectorManager'));
-const CreateDirector = React.lazy(() => import('./pages/CreateDirector'));
-const DirectorDetails = React.lazy(() => import('./pages/DirectorDetails'));
-const MeetingRoom = React.lazy(() => import('./pages/MeetingRoom'));
-const MeetingHistory = React.lazy(() => import('./pages/MeetingHistory'));
-const CreateMeeting = React.lazy(() => import('./pages/CreateMeeting'));
-const FavoritesPage = React.lazy(() => import('./pages/FavoritesPage'));
-const DirectorGroups = React.lazy(() => import('./pages/DirectorGroups'));
+// 懒加载非首页组件，减少初始bundle大小 - 优化分块策略
+const DirectorManager = React.lazy(() => 
+  import(/* webpackChunkName: "directors" */ './pages/DirectorManager')
+);
+const CreateDirector = React.lazy(() => 
+  import(/* webpackChunkName: "directors" */ './pages/CreateDirector')
+);
+const DirectorDetails = React.lazy(() => 
+  import(/* webpackChunkName: "directors" */ './pages/DirectorDetails')
+);
+const MeetingRoom = React.lazy(() => 
+  import(/* webpackChunkName: "meetings" */ './pages/MeetingRoom')
+);
+const MeetingHistory = React.lazy(() => 
+  import(/* webpackChunkName: "meetings" */ './pages/MeetingHistory')
+);
+const CreateMeeting = React.lazy(() => 
+  import(/* webpackChunkName: "meetings" */ './pages/CreateMeeting')
+);
+const FavoritesPage = React.lazy(() => 
+  import(/* webpackChunkName: "favorites" */ './pages/FavoritesPage')
+);
+const DirectorGroups = React.lazy(() => 
+  import(/* webpackChunkName: "groups" */ './pages/DirectorGroups')
+);
 
 // 加载中组件
 const LoadingComponent = () => (
