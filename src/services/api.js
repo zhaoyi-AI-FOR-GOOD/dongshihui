@@ -17,7 +17,7 @@ const api = axios.create({
   timeout: 15000, // 减少超时时间，更适合移动网络
   headers: {
     'Content-Type': 'application/json',
-    'Cache-Control': 'public, max-age=300', // 5分钟缓存
+    // 移除Cache-Control头避免CORS问题
   },
 });
 
