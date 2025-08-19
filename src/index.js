@@ -8,12 +8,20 @@ import { Toaster } from 'react-hot-toast';
 import App from './App';
 import { boardTheme } from './theme/boardTheme';
 
-// 创建React Query客户端
+// 创建React Query客户端，优化性能配置
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      staleTime: 5 * 60 * 1000, // 5分钟
+      staleTime: 5 * 60 * 1000, // 5分钟缓存
+      cacheTime: 10 * 60 * 1000, // 10分钟内存缓存
+      refetchOnWindowFocus: false, // 减少不必要的重新获取
+      refetchOnReconnect: 'always',
+      refetchInterval: false, // 关闭轮询减少主线程负担
+      suspense: false,
+    },
+    mutations: {
+      retry: 1,
     },
   },
 });

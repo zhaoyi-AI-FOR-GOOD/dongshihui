@@ -1,30 +1,28 @@
 import React from 'react';
-import {
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  CardActions,
-  Button,
-  Box,
-  Chip,
-  Avatar,
-  Paper,
-  Fade,
-  IconButton,
-  useMediaQuery,
-  useTheme
-} from '@mui/material';
-import {
-  Person as PersonIcon,
-  AccessTime as TimeIcon,
-  Forum as ForumIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  PlayArrow as PlayIcon
-} from '@mui/icons-material';
+// 按需导入减少bundle大小
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardMedia from '@mui/material/CardMedia';
+import CardActions from '@mui/material/CardActions';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import Avatar from '@mui/material/Avatar';
+import Paper from '@mui/material/Paper';
+import Fade from '@mui/material/Fade';
+import IconButton from '@mui/material/IconButton';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import useTheme from '@mui/material/styles/useTheme';
+
+import PersonIcon from '@mui/icons-material/Person';
+import TimeIcon from '@mui/icons-material/AccessTime';
+import ForumIcon from '@mui/icons-material/Forum';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import PlayIcon from '@mui/icons-material/PlayArrow';
 import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
