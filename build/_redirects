@@ -1,0 +1,8 @@
+# Netlify/Vercel SPA重定向规则
+/*    /index.html   200
+
+# 缓存静态资源
+/static/*  Cache-Control: max-age=31536000,immutable
+
+# API代理（如果需要）
+/api/*  https://dongshihui-api.jieshu2023.workers.dev/:splat  200

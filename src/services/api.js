@@ -11,10 +11,24 @@ const getBaseURL = () => {
   }
 };
 
+// API重试配置
+const retryConfig = {
+  retries: 3,
+  retryDelay: (retryCount) => Math.min(1000 * Math.pow(2, retryCount), 5000), // 指数退避
+  retryCondition: (error) => {
+    // 重试条件：网络错误、503服务不可用、超时等
+    return !error.response || 
+           error.response.status === 503 || 
+           error.response.status >= 500 ||
+           error.code === 'ECONNABORTED' ||
+           error.code === 'NETWORK_ERROR';
+  }
+};
+
 // 创建axios实例
 const api = axios.create({
   baseURL: getBaseURL(),
-  timeout: 15000, // 减少超时时间，更适合移动网络
+  timeout: 20000, // 增加超时时间适应503错误恢复
   headers: {
     'Content-Type': 'application/json',
     // 移除Cache-Control头避免CORS问题
@@ -33,22 +47,61 @@ api.interceptors.request.use(
   }
 );
 
-// 响应拦截器
+// API重试函数
+const retryRequest = async (config, retryCount = 0) => {
+  try {
+    const response = await api.request(config);
+    console.log(`✅ API响应: ${config.url}`, response.data);
+    return response;
+  } catch (error) {
+    console.error(`❌ API响应错误 (尝试 ${retryCount + 1}/${retryConfig.retries + 1}):`, error.response?.data || error.message);
+    
+    // 检查是否应该重试
+    if (retryCount < retryConfig.retries && retryConfig.retryCondition(error)) {
+      const delay = retryConfig.retryDelay(retryCount);
+      console.warn(`⏱️ ${delay}ms 后重试...`);
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retryRequest(config, retryCount + 1);
+    }
+    
+    // 处理特定错误状态
+    if (error.response?.status === 503) {
+      throw new Error('服务暂时不可用，请稍后重试');
+    } else if (error.response?.status === 404) {
+      throw new Error('API端点不存在');
+    } else if (error.response?.status >= 500) {
+      throw new Error('服务器内部错误，请稍后重试');
+    } else if (error.code === 'ECONNREFUSED') {
+      throw new Error('无法连接到服务器');
+    } else if (error.code === 'ECONNABORTED') {
+      throw new Error('请求超时，请检查网络连接');
+    }
+    
+    throw error;
+  }
+};
+
+// 响应拦截器 - 使用重试机制
 api.interceptors.response.use(
   (response) => {
     console.log(`✅ API响应: ${response.config.url}`, response.data);
     return response;
   },
-  (error) => {
-    console.error('❌ API响应错误:', error.response?.data || error.message);
+  async (error) => {
+    const config = error.config;
     
-    // 处理常见错误
-    if (error.response?.status === 404) {
-      throw new Error('API端点不存在');
-    } else if (error.response?.status === 500) {
-      throw new Error('服务器内部错误');
-    } else if (error.code === 'ECONNREFUSED') {
-      throw new Error('无法连接到服务器，请确保后端服务正在运行');
+    // 避免重复重试已经标记的请求
+    if (config._retry) {
+      throw error;
+    }
+    
+    config._retry = true;
+    
+    // 检查是否应该重试
+    if (retryConfig.retryCondition(error)) {
+      console.warn('🔄 触发API重试机制...');
+      return retryRequest(config);
     }
     
     throw error;
