@@ -279,6 +279,70 @@ const DiscussionModeDisplay = ({
     );
   };
 
+  // 董事会模式的发言顺序显示
+  const renderBoardMode = () => {
+    // 计算当前轮次中已发言的董事
+    const currentRoundStatements = statements.filter(s => 
+      s.round_number === meeting.current_round && s.content_type === 'regular'
+    );
+    
+    const spokenDirectorIds = new Set(currentRoundStatements.map(s => s.director_id));
+    
+    return (
+      <Paper sx={{ p: 2, mb: 2, backgroundColor: config.bgColor, border: `1px solid ${config.color}` }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          {config.icon}
+          <Typography variant="h6" sx={{ ml: 1, color: config.color, fontWeight: 600 }}>
+            {config.name}
+          </Typography>
+          <Chip 
+            label={config.description} 
+            size="small" 
+            sx={{ ml: 2, backgroundColor: config.color, color: 'white' }}
+          />
+        </Box>
+        
+        <Typography variant="subtitle2" gutterBottom>董事会成员发言状态：</Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+          {participants.map((participant, index) => {
+            const isCurrent = index === currentSpeakerIndex;
+            const isNext = index === nextSpeakerIndex;
+            const hasSpoken = spokenDirectorIds.has(participant.director_id);
+            
+            return (
+              <Chip
+                key={participant.director_id}
+                avatar={
+                  <Avatar src={participant.director?.avatar_url} sx={{ width: 24, height: 24 }}>
+                    <PersonIcon sx={{ fontSize: 14 }} />
+                  </Avatar>
+                }
+                label={participant.director?.name}
+                variant={isCurrent ? "filled" : "outlined"}
+                color={isCurrent ? "primary" : isNext ? "secondary" : hasSpoken ? "default" : "warning"}
+                sx={{
+                  backgroundColor: isCurrent ? config.color : 
+                                   isNext ? '#FFA726' : 
+                                   hasSpoken ? '#E0E0E0' : '#FFF3E0',
+                  opacity: hasSpoken && !isCurrent && !isNext ? 0.7 : 1,
+                  border: isNext ? '2px solid #FFA726' : undefined
+                }}
+              />
+            );
+          })}
+        </Box>
+        
+        <Typography variant="body2" sx={{ color: config.color, fontWeight: 500 }}>
+          第 {meeting.current_round} 轮讨论 | 
+          已发言：{currentRoundStatements.length}/{participants.length} | 
+          {nextSpeakerIndex !== -1 && !spokenDirectorIds.has(participants[nextSpeakerIndex]?.director_id) && 
+            `下一位：${participants[nextSpeakerIndex]?.director?.name}`}
+          {meeting.current_round >= 2 && ' | 可进行投票表决'}
+        </Typography>
+      </Paper>
+    );
+  };
+
   // 根据模式渲染不同的界面
   const renderModeSpecificContent = () => {
     switch (discussionMode) {
@@ -290,6 +354,8 @@ const DiscussionModeDisplay = ({
         return renderFocusMode();
       case 'free':
         return renderFreeMode();
+      case 'board':
+        return renderBoardMode();
       default:
         return null;
     }

@@ -80,6 +80,12 @@ const StatementDisplay = ({
           border: '1px solid #4CAF50',
           borderRadius: '16px'
         };
+      case 'board':
+        return {
+          bg: '#FFF3E0',
+          border: '2px solid #FF6B35',
+          borderLeft: '6px solid #FF6B35'
+        };
       default: // round_robin
         return {
           bg: '#FAFAFA',
@@ -102,6 +108,8 @@ const StatementDisplay = ({
         return `${director?.name} (第${statement.round_number}层)`;
       case 'free':
         return `${director?.name} (${statement.sequence_in_round})`;
+      case 'board':
+        return `${director?.name} (董事)`;
       default:
         return director?.name;
     }
@@ -119,6 +127,8 @@ const StatementDisplay = ({
         return '#7B1FA2';
       case 'free':
         return '#388E3C';
+      case 'board':
+        return '#FF6B35';
       default:
         return '#F57C00';
     }

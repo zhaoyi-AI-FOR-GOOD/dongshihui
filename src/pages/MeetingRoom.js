@@ -212,14 +212,48 @@ const MeetingRoom = () => {
     if (isGenerating) return;
     setIsGenerating(true);
     
-    // 董事会模式：指定下一个发言者
+    // 董事会模式：优先指定还未发言的董事
     if (meeting?.discussion_mode === 'board') {
+      const unspokenDirectors = getUnspokenDirectorsInCurrentRound();
+      
+      if (unspokenDirectors.length > 0) {
+        // 优先让未发言的董事发言
+        const nextDirector = unspokenDirectors[0];
+        console.log(`🎯 董事会模式：指定董事 ${nextDirector.director?.name} (ID: ${nextDirector.director_id}) 发言`);
+        
+        const data = {
+          director_id: nextDirector.director_id,
+          force_director: true,
+          discussion_mode: 'board'
+        };
+        generateMutation.mutate(data);
+        return;
+      } else {
+        // 如果本轮所有董事都发言了，按轮换顺序继续
+        const nextSpeakerIndex = getNextSpeakerIndex();
+        if (nextSpeakerIndex >= 0 && participants[nextSpeakerIndex]) {
+          const nextDirector = participants[nextSpeakerIndex];
+          console.log(`🔄 董事会模式：轮换到董事 ${nextDirector.director?.name} (ID: ${nextDirector.director_id}) 发言`);
+          
+          const data = {
+            director_id: nextDirector.director_id,
+            force_director: true,
+            discussion_mode: 'board'
+          };
+          generateMutation.mutate(data);
+          return;
+        }
+      }
+    }
+    
+    // 轮流发言模式：指定下一个发言者
+    if (meeting?.discussion_mode === 'round_robin') {
       const nextSpeakerIndex = getNextSpeakerIndex();
       if (nextSpeakerIndex >= 0 && participants[nextSpeakerIndex]) {
         const nextDirector = participants[nextSpeakerIndex];
         const data = {
           director_id: nextDirector.director_id,
-          force_director: true // 强制指定发言者
+          force_director: true
         };
         generateMutation.mutate(data);
         return;
@@ -298,9 +332,9 @@ const MeetingRoom = () => {
     }
   };
 
-  // 计算当前和下一个发言者（轮流发言模式）
+  // 计算当前和下一个发言者（支持轮流发言和董事会模式）
   const getCurrentSpeakerIndex = () => {
-    if (meeting?.discussion_mode !== 'round_robin') return -1;
+    if (meeting?.discussion_mode !== 'round_robin' && meeting?.discussion_mode !== 'board') return -1;
     
     const currentRoundStatements = statements.filter(s => 
       s.round_number === meeting.current_round && s.content_type === 'regular'
@@ -314,6 +348,18 @@ const MeetingRoom = () => {
     
     const current = getCurrentSpeakerIndex();
     return (current + 1) % participants.length;
+  };
+
+  // 董事会模式特有：获取当前轮次中还未发言的董事
+  const getUnspokenDirectorsInCurrentRound = () => {
+    if (meeting?.discussion_mode !== 'board') return [];
+    
+    const currentRoundStatements = statements.filter(s => 
+      s.round_number === meeting.current_round && s.content_type === 'regular'
+    );
+    
+    const spokenDirectorIds = new Set(currentRoundStatements.map(s => s.director_id));
+    return participants.filter(p => !spokenDirectorIds.has(p.director_id));
   };
 
   // 智能滚动控制 - 只滚动会议讨论记录容器
