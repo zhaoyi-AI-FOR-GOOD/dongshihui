@@ -287,6 +287,26 @@ export const meetingAPI = {
   // 获取问题回应
   getQuestionResponse: (meetingId, questionId) => {
     return api.post(`/meetings/${meetingId}/questions/${questionId}/respond`);
+  },
+
+  // 发起投票
+  startVoting: (meetingId, data) => {
+    return api.post(`/meetings/${meetingId}/voting/start`, data);
+  },
+
+  // 提交投票
+  submitVote: (meetingId, voteData) => {
+    return api.post(`/meetings/${meetingId}/voting/submit`, voteData);
+  },
+
+  // 获取投票结果
+  getVotingResults: (meetingId) => {
+    return api.get(`/meetings/${meetingId}/voting/results`);
+  },
+
+  // 结束投票
+  endVoting: (meetingId) => {
+    return api.post(`/meetings/${meetingId}/voting/end`);
   }
 };
 

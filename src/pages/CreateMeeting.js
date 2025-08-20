@@ -233,7 +233,8 @@ const CreateMeeting = () => {
     'round_robin': '轮流发言',
     'debate': '辩论模式',
     'focus': '聚焦讨论',
-    'free': '自由发言'
+    'free': '自由发言',
+    'board': '董事会'
   };
 
   return (
@@ -362,6 +363,7 @@ const CreateMeeting = () => {
                 {formData.discussion_mode === 'debate' && ' 自动分正反方阵营，支持反驳回击，观点激烈碰撞'}
                 {formData.discussion_mode === 'focus' && ' 围绕核心议题逐层深入，结构化探讨，层次清晰'}
                 {formData.discussion_mode === 'free' && ' 随机发言顺序，支持举手插话，自然灵活互动'}
+                {formData.discussion_mode === 'board' && ' 董事会正式会议模式：先讨论后投票，每位董事就议题表决，最终统计表决结果'}
               </Alert>
             </Paper>
           </Grid>

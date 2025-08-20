@@ -52,6 +52,7 @@ import QuestionBox from '../components/QuestionBox';
 import QuestionResponseList from '../components/QuestionResponseList';
 import FavoriteButton from '../components/FavoriteButton';
 import QuoteCard from '../components/QuoteCard';
+import VotingPanel from '../components/VotingPanel';
 import MeetingSummary from '../components/MeetingSummary';
 import MeetingExport from '../components/MeetingExport';
 import DiscussionModeDisplay from '../components/DiscussionModeDisplay';
@@ -399,17 +400,20 @@ const MeetingRoom = () => {
                     meeting.discussion_mode === 'round_robin' ? '轮流发言' :
                     meeting.discussion_mode === 'debate' ? '辩论模式' :
                     meeting.discussion_mode === 'focus' ? '聚焦讨论' :
-                    meeting.discussion_mode === 'free' ? '自由发言' : '未知模式'
+                    meeting.discussion_mode === 'free' ? '自由发言' :
+                    meeting.discussion_mode === 'board' ? '董事会' : '未知模式'
                   }
                   variant="outlined"
                   size="small"
                   sx={{
                     color: meeting.discussion_mode === 'debate' ? '#D32F2F' :
                            meeting.discussion_mode === 'focus' ? '#7B1FA2' :
-                           meeting.discussion_mode === 'free' ? '#388E3C' : '#1565C0',
+                           meeting.discussion_mode === 'free' ? '#388E3C' :
+                           meeting.discussion_mode === 'board' ? '#FF6B35' : '#1565C0',
                     borderColor: meeting.discussion_mode === 'debate' ? '#D32F2F' :
                                 meeting.discussion_mode === 'focus' ? '#7B1FA2' :
-                                meeting.discussion_mode === 'free' ? '#388E3C' : '#1565C0'
+                                meeting.discussion_mode === 'free' ? '#388E3C' :
+                                meeting.discussion_mode === 'board' ? '#FF6B35' : '#1565C0'
                   }}
                 />
                 
@@ -471,7 +475,8 @@ const MeetingRoom = () => {
                   {isGenerating ? '生成中...' : 
                    meeting.discussion_mode === 'debate' ? '继续辩论' :
                    meeting.discussion_mode === 'focus' ? '深入讨论' :
-                   meeting.discussion_mode === 'free' ? '自由发言' : '下一个发言'}
+                   meeting.discussion_mode === 'free' ? '自由发言' :
+                   meeting.discussion_mode === 'board' ? '董事发言' : '下一个发言'}
                 </Button>
               </>
             )}
@@ -669,13 +674,15 @@ const MeetingRoom = () => {
                                 label={meeting.discussion_mode === 'debate' ? `第${statement.round_number}回合` : 
                                        meeting.discussion_mode === 'focus' ? `第${statement.round_number}层讨论` :
                                        meeting.discussion_mode === 'free' ? `阶段${statement.round_number}` :
+                                       meeting.discussion_mode === 'board' ? `第${statement.round_number}轮讨论` :
                                        `第${statement.round_number}轮`} 
                                 size="small" 
                                 color="primary"
                                 sx={{ 
                                   backgroundColor: meeting.discussion_mode === 'debate' ? '#D32F2F' :
                                                   meeting.discussion_mode === 'focus' ? '#7B1FA2' :
-                                                  meeting.discussion_mode === 'free' ? '#388E3C' : '#1565C0',
+                                                  meeting.discussion_mode === 'free' ? '#388E3C' :
+                                                  meeting.discussion_mode === 'board' ? '#FF6B35' : '#1565C0',
                                   color: 'white',
                                   fontWeight: 600
                                 }}
@@ -724,7 +731,8 @@ const MeetingRoom = () => {
                   {meeting.discussion_mode === 'round_robin' ? '轮流发言模式' :
                    meeting.discussion_mode === 'debate' ? '辩论模式' :
                    meeting.discussion_mode === 'focus' ? '聚焦讨论模式' :
-                   meeting.discussion_mode === 'free' ? '自由发言模式' : '讨论模式'}
+                   meeting.discussion_mode === 'free' ? '自由发言模式' :
+                   meeting.discussion_mode === 'board' ? '董事会模式' : '讨论模式'}
                 </Typography>
                 <Chip 
                   label={`${statements.length}发言`} 
@@ -743,6 +751,9 @@ const MeetingRoom = () => {
               participants={participants}
             />
           )}
+          
+          {/* 投票面板 - 仅在董事会模式下显示 */}
+          <VotingPanel meeting={meeting} participants={participants} />
           
           {/* 问题和回应列表 - 手机端简化 */}
           {questions.length > 0 && (
@@ -813,6 +824,7 @@ const MeetingRoom = () => {
               {meeting.discussion_mode === 'debate' && '点击"继续辩论"让对方进行反驳'}
               {meeting.discussion_mode === 'focus' && '点击"深入讨论"进入下一层分析'}
               {meeting.discussion_mode === 'free' && '点击"自由发言"让董事们随机互动'}
+              {meeting.discussion_mode === 'board' && '董事会模式：先讨论交流观点，达到足够轮次后进行投票表决'}
               {!meeting.discussion_mode && '点击"下一个发言"让董事们继续讨论'}
             </Alert>
           )}

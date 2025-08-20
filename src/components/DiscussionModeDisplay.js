@@ -16,6 +16,7 @@ import {
   Gavel as GavelIcon,
   CenterFocusStrong as FocusIcon,
   Diversity3 as FreeIcon,
+  HowToVote as BoardIcon,
   Person as PersonIcon,
   TrendingUp as TrendingIcon,
   QuestionAnswer as QuestionIcon
@@ -59,6 +60,13 @@ const DiscussionModeDisplay = ({
       color: '#388E3C',
       bgColor: '#E8F5E8',
       description: '灵活互动随机发言'
+    },
+    board: {
+      name: '董事会',
+      icon: <BoardIcon />,
+      color: '#FF6B35',
+      bgColor: '#FFF3E0',
+      description: '先讨论后投票表决'
     }
   };
 
