@@ -137,16 +137,11 @@ const CreateMeeting = () => {
     },
     {
       onSuccess: (response) => {
-        const isDemo = response.data?.data?.id?.toString().length > 10; // 判断是否为演示模式
-        if (isDemo) {
-          toast.success('会议已创建！当前为演示模式，API服务正在维护中。', { duration: 4000 });
-          // 演示模式下跳转到大厅而不是具体会议
-          navigate('/hall');
-        } else {
-          toast.success('会议创建成功！');
-          queryClient.invalidateQueries('meetings');
-          navigate(`/meeting/${response.data.data.id}`);
-        }
+        const meetingId = response.data?.data?.id;
+        toast.success('会议创建成功！');
+        queryClient.invalidateQueries('meetings');
+        // 直接跳转到会议页面
+        navigate(`/meeting/${meetingId}`);
       },
       onError: (err) => {
         console.error('创建会议失败:', err);
