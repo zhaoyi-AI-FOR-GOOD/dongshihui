@@ -172,6 +172,26 @@ export const directorAPI = {
   // 重新解析董事人设
   reparseDirector: (id) => {
     return api.post(`/directors/${id}/reparse`);
+  },
+
+  // 获取董事组合列表
+  getGroups: (userId = 'default_user') => {
+    return api.get(`/director-groups`, { params: { user_id: userId } });
+  },
+
+  // 获取董事组合详情
+  getGroupById: (id) => {
+    return api.get(`/director-groups/${id}`);
+  },
+
+  // 创建董事组合
+  createGroup: (data) => {
+    return api.post('/director-groups', data);
+  },
+
+  // 删除董事组合
+  deleteGroup: (id, userId = 'default_user') => {
+    return api.delete(`/director-groups/${id}`, { params: { user_id: userId } });
   }
 };
 
@@ -235,6 +255,65 @@ export const meetingAPI = {
   // 删除会议
   delete: (id) => {
     return api.delete(`/meetings/${id}`);
+  },
+
+  // 从董事组合创建会议
+  createFromGroup: (groupId, data) => {
+    return api.post(`/meetings/from-group/${groupId}`, data);
+  },
+
+  // 导出会议
+  export: (id, format = 'json') => {
+    return api.get(`/meetings/${id}/export`, { 
+      params: { format },
+      responseType: format === 'pdf' ? 'blob' : 'json'
+    });
+  },
+
+  // 获取会议总结
+  getSummary: (id, options = {}) => {
+    return api.post(`/meetings/${id}/summary`, options);
+  },
+
+  // 提问功能
+  submitQuestion: (id, question) => {
+    return api.post(`/meetings/${id}/questions`, { question });
+  },
+
+  // 获取问题回应
+  getQuestionResponse: (meetingId, questionId) => {
+    return api.post(`/meetings/${meetingId}/questions/${questionId}/respond`);
+  }
+};
+
+// 收藏相关API
+export const favoriteAPI = {
+  // 获取收藏列表
+  getAll: (userId = 'default_user', params = {}) => {
+    return api.get('/favorites', { params: { user_id: userId, ...params } });
+  },
+
+  // 获取收藏标签
+  getTags: (userId = 'default_user') => {
+    return api.get('/favorites/tags', { params: { user_id: userId } });
+  },
+
+  // 添加收藏
+  create: (data) => {
+    return api.post('/favorites', data);
+  },
+
+  // 删除收藏
+  delete: (favoriteId, userId = 'default_user') => {
+    return api.delete(`/favorites/${favoriteId}`, { params: { user_id: userId } });
+  }
+};
+
+// 发言相关API
+export const statementAPI = {
+  // 获取发言卡片
+  getCard: (statementId) => {
+    return api.get(`/statements/${statementId}/card`);
   }
 };
 
