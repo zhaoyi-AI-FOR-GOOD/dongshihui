@@ -241,6 +241,45 @@ export const meetingAPI = {
     return api.post(`/meetings/${id}/next-statement`, data);
   },
 
+  // 董事会模式专用：强制轮换发言者
+  generateNextStatementWithRetry: async (id, data = {}, maxRetries = 5) => {
+    const targetDirectorId = data.director_id;
+    console.log(`🎯 尝试生成董事 ${targetDirectorId} 的发言，最大重试次数: ${maxRetries}`);
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await api.post(`/meetings/${id}/next-statement`, {
+          ...data,
+          attempt_number: attempt,
+          force_director: true,
+          discussion_mode: 'board'
+        });
+        
+        const actualDirectorId = response.data?.data?.director?.id;
+        console.log(`🔍 尝试 ${attempt}: 目标=${targetDirectorId}, 实际=${actualDirectorId}`);
+        
+        if (actualDirectorId === targetDirectorId) {
+          console.log(`✅ 成功：董事 ${response.data?.data?.director?.name} 发言`);
+          return response;
+        } else {
+          console.log(`❌ 失败：期望 ${targetDirectorId}，得到 ${actualDirectorId}`);
+          if (attempt < maxRetries) {
+            console.log(`⏱️ 等待 ${attempt * 500}ms 后重试...`);
+            await new Promise(resolve => setTimeout(resolve, attempt * 500));
+          }
+        }
+      } catch (error) {
+        console.error(`❌ 尝试 ${attempt} 失败:`, error.message);
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+      }
+    }
+    
+    throw new Error(`无法在 ${maxRetries} 次尝试内让指定董事 ${targetDirectorId} 发言`);
+  },
+
   // 获取会议发言记录
   getStatements: (id, params = {}) => {
     return api.get(`/meetings/${id}/statements`, { params });

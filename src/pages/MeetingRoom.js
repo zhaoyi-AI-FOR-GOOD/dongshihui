@@ -207,40 +207,62 @@ const MeetingRoom = () => {
     }
   );
 
+  // 董事会模式专用：强制轮换发言者
+  const generateWithRetryMutation = useMutation(
+    (data) => meetingAPI.generateNextStatementWithRetry(id, data),
+    {
+      onSuccess: (response) => {
+        const directorName = response.data?.data?.director?.name;
+        toast.success(`${directorName} 的发言已生成${!autoScroll ? '，滚动查看最新内容' : ''}`);
+        refetch();
+        setIsGenerating(false);
+      },
+      onError: (err) => {
+        console.error('董事会轮换发言失败:', err);
+        toast.error('无法强制指定发言者: ' + err.message);
+        setIsGenerating(false);
+      }
+    }
+  );
+
   // 处理生成下一个发言
   const handleGenerateNext = () => {
     if (isGenerating) return;
     setIsGenerating(true);
     
-    // 董事会模式：优先指定还未发言的董事
+    // 董事会模式：使用强制轮换机制
     if (meeting?.discussion_mode === 'board') {
       const unspokenDirectors = getUnspokenDirectorsInCurrentRound();
       
       if (unspokenDirectors.length > 0) {
         // 优先让未发言的董事发言
         const nextDirector = unspokenDirectors[0];
-        console.log(`🎯 董事会模式：指定董事 ${nextDirector.director?.name} (ID: ${nextDirector.director_id}) 发言`);
+        console.log(`🎯 董事会模式：强制指定董事 ${nextDirector.director?.name} (ID: ${nextDirector.director_id}) 发言`);
         
         const data = {
           director_id: nextDirector.director_id,
           force_director: true,
           discussion_mode: 'board'
         };
-        generateMutation.mutate(data);
+        
+        // 使用重试机制强制轮换
+        generateWithRetryMutation.mutate(data);
         return;
       } else {
         // 如果本轮所有董事都发言了，按轮换顺序继续
         const nextSpeakerIndex = getNextSpeakerIndex();
         if (nextSpeakerIndex >= 0 && participants[nextSpeakerIndex]) {
           const nextDirector = participants[nextSpeakerIndex];
-          console.log(`🔄 董事会模式：轮换到董事 ${nextDirector.director?.name} (ID: ${nextDirector.director_id}) 发言`);
+          console.log(`🔄 董事会模式：强制轮换到董事 ${nextDirector.director?.name} (ID: ${nextDirector.director_id}) 发言`);
           
           const data = {
             director_id: nextDirector.director_id,
             force_director: true,
             discussion_mode: 'board'
           };
-          generateMutation.mutate(data);
+          
+          // 使用重试机制强制轮换
+          generateWithRetryMutation.mutate(data);
           return;
         }
       }
