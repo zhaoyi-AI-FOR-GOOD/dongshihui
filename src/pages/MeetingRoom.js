@@ -103,7 +103,13 @@ const MeetingRoom = () => {
 
   // 开始会议
   const startMutation = useMutation(
-    () => meetingAPI.start(id),
+    async () => {
+      // 在启动前检查会议状态
+      if (meeting?.status && meeting.status !== 'preparing') {
+        throw new Error(`会议当前状态为"${meeting.status}"，无法启动`);
+      }
+      return await meetingAPI.start(id);
+    },
     {
       onSuccess: async () => {
         toast.success('会议已开始！');
@@ -128,7 +134,14 @@ const MeetingRoom = () => {
         }
       },
       onError: (err) => {
-        toast.error('开始会议失败: ' + err.message);
+        const errorMsg = err.message;
+        if (errorMsg.includes('Meeting cannot be started') || errorMsg.includes('already started') || errorMsg.includes('已开始')) {
+          toast.warning('会议已经开始了！正在刷新页面状态...');
+          // 刷新会议状态以同步最新状态
+          refetch();
+        } else {
+          toast.error('开始会议失败: ' + errorMsg);
+        }
       }
     }
   );

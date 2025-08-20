@@ -66,7 +66,11 @@ const retryRequest = async (config, retryCount = 0) => {
     }
     
     // 处理特定错误状态
-    if (error.response?.status === 503) {
+    if (error.response?.status === 400) {
+      // 400错误：请求参数错误或业务逻辑错误
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || '请求参数错误';
+      throw new Error(errorMsg);
+    } else if (error.response?.status === 503) {
       throw new Error('服务暂时不可用，请稍后重试');
     } else if (error.response?.status === 404) {
       throw new Error('API端点不存在');
