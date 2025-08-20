@@ -105,15 +105,27 @@ const MeetingRoom = () => {
   const startMutation = useMutation(
     () => meetingAPI.start(id),
     {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast.success('会议已开始！');
-        refetch();
-        // 会议开始后，自动生成第一个发言
-        setTimeout(() => {
-          if (!isGenerating) {
-            handleGenerateNext();
-          }
-        }, 1000);
+        try {
+          // 先刷新会议状态，确保状态更新
+          await refetch();
+          
+          // 给用户一个选择，而不是自动生成
+          toast.success('会议已开始！您可以点击"下一个发言"开始讨论', { 
+            duration: 4000 
+          });
+          
+          // 可选：延迟更长时间后自动生成，但不阻塞开始会议的成功
+          // setTimeout(() => {
+          //   if (!isGenerating) {
+          //     handleGenerateNext();
+          //   }
+          // }, 3000);
+          
+        } catch (error) {
+          console.warn('刷新会议状态失败，但会议已成功开始:', error);
+        }
       },
       onError: (err) => {
         toast.error('开始会议失败: ' + err.message);
@@ -224,10 +236,11 @@ const MeetingRoom = () => {
   const fetchQuestions = async () => {
     if (!id) return;
     try {
-      const response = await fetch(`https://dongshihui-api.jieshu2023.workers.dev/meetings/${id}/questions`);
-      const result = await response.json();
-      if (result.success) {
-        setQuestions(result.data);
+      // 使用统一API服务避免CORS问题
+      const response = await meetingAPI.getById(id);
+      if (response.data?.success) {
+        // 从会议详情中获取问题信息，或者需要后端提供专门的questions API
+        setQuestions(response.data.data?.questions || []);
       }
     } catch (error) {
       console.error('获取问题列表失败:', error);
