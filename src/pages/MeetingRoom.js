@@ -192,7 +192,7 @@ const MeetingRoom = () => {
 
   // 生成下一个发言
   const generateMutation = useMutation(
-    () => meetingAPI.generateNextStatement(id),
+    (data) => meetingAPI.generateNextStatement(id, data),
     {
       onSuccess: (response) => {
         const directorName = response.data?.data?.director?.name;
@@ -211,6 +211,21 @@ const MeetingRoom = () => {
   const handleGenerateNext = () => {
     if (isGenerating) return;
     setIsGenerating(true);
+    
+    // 董事会模式：指定下一个发言者
+    if (meeting?.discussion_mode === 'board') {
+      const nextSpeakerIndex = getNextSpeakerIndex();
+      if (nextSpeakerIndex >= 0 && participants[nextSpeakerIndex]) {
+        const nextDirector = participants[nextSpeakerIndex];
+        const data = {
+          director_id: nextDirector.director_id,
+          force_director: true // 强制指定发言者
+        };
+        generateMutation.mutate(data);
+        return;
+      }
+    }
+    
     generateMutation.mutate();
   };
 
@@ -294,7 +309,8 @@ const MeetingRoom = () => {
   };
 
   const getNextSpeakerIndex = () => {
-    if (meeting?.discussion_mode !== 'round_robin') return -1;
+    // 董事会模式和轮流发言模式都需要轮换
+    if (meeting?.discussion_mode !== 'round_robin' && meeting?.discussion_mode !== 'board') return -1;
     
     const current = getCurrentSpeakerIndex();
     return (current + 1) % participants.length;
@@ -824,7 +840,9 @@ const MeetingRoom = () => {
               {meeting.discussion_mode === 'debate' && '点击"继续辩论"让对方进行反驳'}
               {meeting.discussion_mode === 'focus' && '点击"深入讨论"进入下一层分析'}
               {meeting.discussion_mode === 'free' && '点击"自由发言"让董事们随机互动'}
-              {meeting.discussion_mode === 'board' && '董事会模式：先讨论交流观点，达到足够轮次后进行投票表决'}
+              {meeting.discussion_mode === 'board' && (getNextSpeakerIndex() >= 0 
+                ? `下一位发言：${participants[getNextSpeakerIndex()]?.director?.name || '等待确定'} | 达到${Math.max(2, participants.length)}轮后可投票表决` 
+                : '董事会模式：先讨论交流观点，达到足够轮次后进行投票表决')}
               {!meeting.discussion_mode && '点击"下一个发言"让董事们继续讨论'}
             </Alert>
           )}
